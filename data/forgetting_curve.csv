@@ -1,0 +1,311 @@
+learning_language,language_name,lag_bin,lag_bin_order,practice_bin,practice_bin_order,n_traces,avg_session_recall,item_recall_rate,pct_perfect_sessions
+all,All languages,<1 hour,0,1-2 exposures,0,383261,0.9157,0.9191,87.37
+all,All languages,<1 hour,0,3-4 exposures,1,893452,0.9137,0.9177,86.26
+all,All languages,<1 hour,0,5-9 exposures,2,1429269,0.9129,0.9186,86.5
+all,All languages,<1 hour,0,10-19 exposures,3,1023779,0.9129,0.9199,86.0
+all,All languages,<1 hour,0,20+ exposures,4,1239541,0.8995,0.9097,84.58
+all,All languages,1-6 hours,1,1-2 exposures,0,80943,0.8947,0.9002,85.22
+all,All languages,1-6 hours,1,3-4 exposures,1,143272,0.8935,0.8998,83.23
+all,All languages,1-6 hours,1,5-9 exposures,2,159481,0.8948,0.9015,83.74
+all,All languages,1-6 hours,1,10-19 exposures,3,106650,0.8998,0.906,84.21
+all,All languages,1-6 hours,1,20+ exposures,4,127278,0.8941,0.9032,84.15
+all,All languages,6-24 hours,2,1-2 exposures,0,197621,0.902,0.906,84.66
+all,All languages,6-24 hours,2,3-4 exposures,1,286679,0.896,0.9019,82.25
+all,All languages,6-24 hours,2,5-9 exposures,2,288746,0.8947,0.9021,83.33
+all,All languages,6-24 hours,2,10-19 exposures,3,196328,0.8975,0.905,83.86
+all,All languages,6-24 hours,2,20+ exposures,4,252897,0.8865,0.8987,83.29
+all,All languages,1-3 days,3,1-2 exposures,0,324363,0.9001,0.9059,84.42
+all,All languages,1-3 days,3,3-4 exposures,1,482501,0.8924,0.9019,81.54
+all,All languages,1-3 days,3,5-9 exposures,2,431347,0.8902,0.8987,82.48
+all,All languages,1-3 days,3,10-19 exposures,3,276277,0.891,0.9001,83.56
+all,All languages,1-3 days,3,20+ exposures,4,320300,0.8867,0.898,83.59
+all,All languages,3-7 days,4,1-2 exposures,0,278021,0.8936,0.9004,83.9
+all,All languages,3-7 days,4,3-4 exposures,1,424641,0.8891,0.9006,81.1
+all,All languages,3-7 days,4,5-9 exposures,2,390189,0.8866,0.8973,81.35
+all,All languages,3-7 days,4,10-19 exposures,3,222990,0.8861,0.896,82.77
+all,All languages,3-7 days,4,20+ exposures,4,215467,0.886,0.8961,83.53
+all,All languages,1-2 weeks,5,1-2 exposures,0,174370,0.8858,0.8947,83.48
+all,All languages,1-2 weeks,5,3-4 exposures,1,278866,0.8847,0.8966,81.2
+all,All languages,1-2 weeks,5,5-9 exposures,2,269673,0.8839,0.8954,81.62
+all,All languages,1-2 weeks,5,10-19 exposures,3,160837,0.8851,0.8945,82.88
+all,All languages,1-2 weeks,5,20+ exposures,4,129363,0.8867,0.8964,83.58
+all,All languages,2-4 weeks,6,1-2 exposures,0,128898,0.8773,0.8873,83.14
+all,All languages,2-4 weeks,6,3-4 exposures,1,212802,0.8778,0.8905,81.49
+all,All languages,2-4 weeks,6,5-9 exposures,2,218341,0.8801,0.8908,82.17
+all,All languages,2-4 weeks,6,10-19 exposures,3,136304,0.8838,0.8929,83.19
+all,All languages,2-4 weeks,6,20+ exposures,4,94949,0.8822,0.8909,82.9
+all,All languages,1-3 months,7,1-2 exposures,0,100672,0.867,0.8764,82.39
+all,All languages,1-3 months,7,3-4 exposures,1,183085,0.8698,0.8807,81.48
+all,All languages,1-3 months,7,5-9 exposures,2,178406,0.8749,0.885,82.2
+all,All languages,1-3 months,7,10-19 exposures,3,106965,0.8766,0.8859,82.06
+all,All languages,1-3 months,7,20+ exposures,4,62641,0.8758,0.885,81.1
+all,All languages,3+ months,8,1-2 exposures,0,48115,0.8456,0.8689,77.63
+all,All languages,3+ months,8,3-4 exposures,1,67466,0.8602,0.8782,78.65
+all,All languages,3+ months,8,5-9 exposures,2,65980,0.8652,0.8824,78.63
+all,All languages,3+ months,8,10-19 exposures,3,40090,0.8702,0.886,79.01
+all,All languages,3+ months,8,20+ exposures,4,21110,0.8646,0.8777,76.53
+de,German,<1 hour,0,1-2 exposures,0,48277,0.9123,0.9182,88.17
+de,German,<1 hour,0,3-4 exposures,1,93796,0.9146,0.9237,87.18
+de,German,<1 hour,0,5-9 exposures,2,154938,0.9128,0.924,86.86
+de,German,<1 hour,0,10-19 exposures,3,101351,0.9142,0.926,87.09
+de,German,<1 hour,0,20+ exposures,4,86669,0.9115,0.9202,86.96
+de,German,1-6 hours,1,1-2 exposures,0,10492,0.8883,0.8969,85.52
+de,German,1-6 hours,1,3-4 exposures,1,17155,0.8902,0.9006,83.74
+de,German,1-6 hours,1,5-9 exposures,2,20215,0.8932,0.9052,83.77
+de,German,1-6 hours,1,10-19 exposures,3,12031,0.8999,0.9117,84.96
+de,German,1-6 hours,1,20+ exposures,4,10248,0.9083,0.9194,86.9
+de,German,6-24 hours,2,1-2 exposures,0,24663,0.8938,0.9007,85.43
+de,German,6-24 hours,2,3-4 exposures,1,34045,0.8939,0.9042,83.35
+de,German,6-24 hours,2,5-9 exposures,2,37817,0.8948,0.9078,83.63
+de,German,6-24 hours,2,10-19 exposures,3,24053,0.8955,0.9074,84.27
+de,German,6-24 hours,2,20+ exposures,4,22431,0.9039,0.9153,86.37
+de,German,1-3 days,3,1-2 exposures,0,42946,0.8892,0.897,84.6
+de,German,1-3 days,3,3-4 exposures,1,58425,0.8863,0.9004,81.76
+de,German,1-3 days,3,5-9 exposures,2,57061,0.8864,0.8999,82.21
+de,German,1-3 days,3,10-19 exposures,3,32849,0.8899,0.9024,84.02
+de,German,1-3 days,3,20+ exposures,4,29481,0.8985,0.9097,85.9
+de,German,3-7 days,4,1-2 exposures,0,40593,0.8841,0.8923,84.11
+de,German,3-7 days,4,3-4 exposures,1,53687,0.8792,0.8952,80.92
+de,German,3-7 days,4,5-9 exposures,2,50887,0.8794,0.8952,80.96
+de,German,3-7 days,4,10-19 exposures,3,26821,0.8884,0.902,83.51
+de,German,3-7 days,4,20+ exposures,4,18371,0.8922,0.9032,84.83
+de,German,1-2 weeks,5,1-2 exposures,0,25812,0.8771,0.8878,83.57
+de,German,1-2 weeks,5,3-4 exposures,1,36230,0.8754,0.8908,81.13
+de,German,1-2 weeks,5,5-9 exposures,2,34917,0.8766,0.8913,80.65
+de,German,1-2 weeks,5,10-19 exposures,3,19552,0.8829,0.8973,82.56
+de,German,1-2 weeks,5,20+ exposures,4,12057,0.892,0.9016,84.44
+de,German,2-4 weeks,6,1-2 exposures,0,18532,0.8699,0.8812,83.02
+de,German,2-4 weeks,6,3-4 exposures,1,26826,0.8716,0.8856,81.16
+de,German,2-4 weeks,6,5-9 exposures,2,28470,0.8731,0.889,81.37
+de,German,2-4 weeks,6,10-19 exposures,3,15971,0.8779,0.892,82.52
+de,German,2-4 weeks,6,20+ exposures,4,9959,0.8707,0.8851,81.53
+de,German,1-3 months,7,1-2 exposures,0,13215,0.8557,0.87,81.3
+de,German,1-3 months,7,3-4 exposures,1,20882,0.8638,0.8794,80.71
+de,German,1-3 months,7,5-9 exposures,2,20988,0.8663,0.8819,80.41
+de,German,1-3 months,7,10-19 exposures,3,11814,0.8659,0.8817,80.18
+de,German,1-3 months,7,20+ exposures,4,6399,0.8711,0.8835,79.9
+de,German,3+ months,8,1-2 exposures,0,9784,0.8181,0.853,74.45
+de,German,3+ months,8,3-4 exposures,1,10684,0.848,0.8751,77.56
+de,German,3+ months,8,5-9 exposures,2,11097,0.8591,0.8826,76.79
+de,German,3+ months,8,10-19 exposures,3,6992,0.8659,0.8872,77.93
+de,German,3+ months,8,20+ exposures,4,3114,0.8594,0.8761,75.5
+en,English,<1 hour,0,1-2 exposures,0,130093,0.9219,0.9251,88.39
+en,English,<1 hour,0,3-4 exposures,1,332131,0.9197,0.9232,87.65
+en,English,<1 hour,0,5-9 exposures,2,592378,0.9159,0.9199,87.07
+en,English,<1 hour,0,10-19 exposures,3,461492,0.9146,0.9198,86.24
+en,English,<1 hour,0,20+ exposures,4,675168,0.8954,0.9064,83.87
+en,English,1-6 hours,1,1-2 exposures,0,25228,0.8957,0.9008,85.84
+en,English,1-6 hours,1,3-4 exposures,1,46661,0.8921,0.8991,83.75
+en,English,1-6 hours,1,5-9 exposures,2,55868,0.8935,0.8999,83.84
+en,English,1-6 hours,1,10-19 exposures,3,41026,0.8993,0.9048,84.24
+en,English,1-6 hours,1,20+ exposures,4,61404,0.8856,0.8959,82.93
+en,English,6-24 hours,2,1-2 exposures,0,67968,0.9088,0.9123,84.92
+en,English,6-24 hours,2,3-4 exposures,1,94223,0.8986,0.9045,82.33
+en,English,6-24 hours,2,5-9 exposures,2,93290,0.8933,0.9,83.25
+en,English,6-24 hours,2,10-19 exposures,3,69277,0.8945,0.9017,83.45
+en,English,6-24 hours,2,20+ exposures,4,117020,0.8728,0.8878,81.37
+en,English,1-3 days,3,1-2 exposures,0,107260,0.9096,0.9128,84.6
+en,English,1-3 days,3,3-4 exposures,1,161130,0.8959,0.9042,80.98
+en,English,1-3 days,3,5-9 exposures,2,141082,0.8911,0.8985,81.97
+en,English,1-3 days,3,10-19 exposures,3,99620,0.8892,0.8979,82.89
+en,English,1-3 days,3,20+ exposures,4,142159,0.8791,0.8914,82.24
+en,English,3-7 days,4,1-2 exposures,0,87331,0.9064,0.9104,84.38
+en,English,3-7 days,4,3-4 exposures,1,141672,0.8952,0.9044,80.45
+en,English,3-7 days,4,5-9 exposures,2,132449,0.8899,0.8992,80.47
+en,English,3-7 days,4,10-19 exposures,3,82751,0.8835,0.893,81.65
+en,English,3-7 days,4,20+ exposures,4,97282,0.8834,0.8936,82.84
+en,English,1-2 weeks,5,1-2 exposures,0,51131,0.8955,0.9021,83.66
+en,English,1-2 weeks,5,3-4 exposures,1,89352,0.8879,0.8984,80.22
+en,English,1-2 weeks,5,5-9 exposures,2,91908,0.8852,0.8968,80.75
+en,English,1-2 weeks,5,10-19 exposures,3,61218,0.8801,0.8908,81.65
+en,English,1-2 weeks,5,20+ exposures,4,60159,0.8826,0.8925,82.67
+en,English,2-4 weeks,6,1-2 exposures,0,35663,0.8858,0.8945,83.93
+en,English,2-4 weeks,6,3-4 exposures,1,68032,0.8815,0.8933,81.33
+en,English,2-4 weeks,6,5-9 exposures,2,72275,0.8819,0.8921,81.84
+en,English,2-4 weeks,6,10-19 exposures,3,52442,0.8806,0.8897,82.33
+en,English,2-4 weeks,6,20+ exposures,4,43408,0.8789,0.888,82.4
+en,English,1-3 months,7,1-2 exposures,0,33634,0.8767,0.8849,83.97
+en,English,1-3 months,7,3-4 exposures,1,64240,0.8738,0.8828,82.12
+en,English,1-3 months,7,5-9 exposures,2,66260,0.8775,0.8862,82.32
+en,English,1-3 months,7,10-19 exposures,3,45735,0.8769,0.8858,81.84
+en,English,1-3 months,7,20+ exposures,4,31995,0.8782,0.8851,81.02
+en,English,3+ months,8,1-2 exposures,0,14945,0.8732,0.8876,82.08
+en,English,3+ months,8,3-4 exposures,1,26637,0.8693,0.8815,79.89
+en,English,3+ months,8,5-9 exposures,2,24930,0.8725,0.8841,79.42
+en,English,3+ months,8,10-19 exposures,3,15123,0.8768,0.8882,79.23
+en,English,3+ months,8,20+ exposures,4,9741,0.8686,0.8793,76.41
+es,Spanish,<1 hour,0,1-2 exposures,0,99923,0.9181,0.9235,87.31
+es,Spanish,<1 hour,0,3-4 exposures,1,253828,0.9149,0.9189,85.98
+es,Spanish,<1 hour,0,5-9 exposures,2,346263,0.9146,0.92,86.43
+es,Spanish,<1 hour,0,10-19 exposures,3,225435,0.9146,0.9214,85.91
+es,Spanish,<1 hour,0,20+ exposures,4,202455,0.9081,0.9181,85.71
+es,Spanish,1-6 hours,1,1-2 exposures,0,22130,0.903,0.91,85.77
+es,Spanish,1-6 hours,1,3-4 exposures,1,43592,0.9013,0.9066,83.78
+es,Spanish,1-6 hours,1,5-9 exposures,2,43856,0.8988,0.9048,84.11
+es,Spanish,1-6 hours,1,10-19 exposures,3,28007,0.902,0.9067,84.29
+es,Spanish,1-6 hours,1,20+ exposures,4,25096,0.9048,0.9123,85.67
+es,Spanish,6-24 hours,2,1-2 exposures,0,52194,0.9042,0.91,84.6
+es,Spanish,6-24 hours,2,3-4 exposures,1,86014,0.9004,0.9056,82.79
+es,Spanish,6-24 hours,2,5-9 exposures,2,83522,0.8993,0.9052,83.88
+es,Spanish,6-24 hours,2,10-19 exposures,3,54215,0.9006,0.9077,84.41
+es,Spanish,6-24 hours,2,20+ exposures,4,53160,0.8989,0.91,85.26
+es,Spanish,1-3 days,3,1-2 exposures,0,88363,0.9011,0.9095,84.55
+es,Spanish,1-3 days,3,3-4 exposures,1,149421,0.8974,0.9063,82.7
+es,Spanish,1-3 days,3,5-9 exposures,2,129006,0.8941,0.9019,83.66
+es,Spanish,1-3 days,3,10-19 exposures,3,77798,0.8933,0.9022,84.38
+es,Spanish,1-3 days,3,20+ exposures,4,74220,0.8902,0.9023,84.62
+es,Spanish,3-7 days,4,1-2 exposures,0,75655,0.8926,0.9025,83.86
+es,Spanish,3-7 days,4,3-4 exposures,1,133813,0.8944,0.9056,82.71
+es,Spanish,3-7 days,4,5-9 exposures,2,118611,0.8897,0.8995,83.03
+es,Spanish,3-7 days,4,10-19 exposures,3,63427,0.8888,0.8984,84.18
+es,Spanish,3-7 days,4,20+ exposures,4,52877,0.8876,0.8984,84.25
+es,Spanish,1-2 weeks,5,1-2 exposures,0,51771,0.8858,0.8977,83.8
+es,Spanish,1-2 weeks,5,3-4 exposures,1,92996,0.8895,0.9019,82.81
+es,Spanish,1-2 weeks,5,5-9 exposures,2,86619,0.8871,0.8978,83.33
+es,Spanish,1-2 weeks,5,10-19 exposures,3,46081,0.8892,0.897,84.31
+es,Spanish,1-2 weeks,5,20+ exposures,4,30348,0.8884,0.8999,84.58
+es,Spanish,2-4 weeks,6,1-2 exposures,0,41100,0.8785,0.8907,83.33
+es,Spanish,2-4 weeks,6,3-4 exposures,1,72512,0.8813,0.8943,82.49
+es,Spanish,2-4 weeks,6,5-9 exposures,2,74612,0.8838,0.8934,83.57
+es,Spanish,2-4 weeks,6,10-19 exposures,3,41739,0.8892,0.899,84.76
+es,Spanish,2-4 weeks,6,20+ exposures,4,22852,0.891,0.8992,84.24
+es,Spanish,1-3 months,7,1-2 exposures,0,29867,0.8739,0.8835,83.26
+es,Spanish,1-3 months,7,3-4 exposures,1,60318,0.8759,0.8869,82.49
+es,Spanish,1-3 months,7,5-9 exposures,2,56430,0.878,0.8881,83.6
+es,Spanish,1-3 months,7,10-19 exposures,3,29421,0.8818,0.8899,83.58
+es,Spanish,1-3 months,7,20+ exposures,4,13200,0.8803,0.8919,82.46
+es,Spanish,3+ months,8,1-2 exposures,0,16365,0.8458,0.8701,77.45
+es,Spanish,3+ months,8,3-4 exposures,1,19639,0.8646,0.8834,79.69
+es,Spanish,3+ months,8,5-9 exposures,2,20171,0.865,0.8843,79.77
+es,Spanish,3+ months,8,10-19 exposures,3,12897,0.8691,0.8866,80.02
+es,Spanish,3+ months,8,20+ exposures,4,5870,0.8657,0.8787,77.61
+fr,French,<1 hour,0,1-2 exposures,0,63569,0.8989,0.8987,83.74
+fr,French,<1 hour,0,3-4 exposures,1,114692,0.8925,0.8978,81.19
+fr,French,<1 hour,0,5-9 exposures,2,176773,0.8958,0.9068,83.31
+fr,French,<1 hour,0,10-19 exposures,3,140445,0.8957,0.9093,83.4
+fr,French,<1 hour,0,20+ exposures,4,204811,0.8898,0.9012,83.27
+fr,French,1-6 hours,1,1-2 exposures,0,13926,0.8832,0.886,82.15
+fr,French,1-6 hours,1,3-4 exposures,1,20385,0.8767,0.8846,79.26
+fr,French,1-6 hours,1,5-9 exposures,2,22640,0.8838,0.8933,81.36
+fr,French,1-6 hours,1,10-19 exposures,3,16565,0.8902,0.8993,82.33
+fr,French,1-6 hours,1,20+ exposures,4,23672,0.8892,0.8985,83.1
+fr,French,6-24 hours,2,1-2 exposures,0,31065,0.8879,0.8877,82.25
+fr,French,6-24 hours,2,3-4 exposures,1,40468,0.8802,0.8867,78.71
+fr,French,6-24 hours,2,5-9 exposures,2,41541,0.8816,0.8925,80.62
+fr,French,6-24 hours,2,10-19 exposures,3,31157,0.8898,0.9002,82.34
+fr,French,6-24 hours,2,20+ exposures,4,46935,0.8877,0.8985,82.98
+fr,French,1-3 days,3,1-2 exposures,0,50753,0.8854,0.8899,82.42
+fr,French,1-3 days,3,3-4 exposures,1,65114,0.876,0.8879,79.1
+fr,French,1-3 days,3,5-9 exposures,2,62257,0.8779,0.8894,80.54
+fr,French,1-3 days,3,10-19 exposures,3,43203,0.8821,0.8927,81.98
+fr,French,1-3 days,3,20+ exposures,4,57106,0.8847,0.8967,83.12
+fr,French,3-7 days,4,1-2 exposures,0,45315,0.8797,0.8831,82.1
+fr,French,3-7 days,4,3-4 exposures,1,57382,0.8703,0.8839,78.62
+fr,French,3-7 days,4,5-9 exposures,2,55909,0.8741,0.887,79.76
+fr,French,3-7 days,4,10-19 exposures,3,33781,0.8786,0.8899,81.53
+fr,French,3-7 days,4,20+ exposures,4,35705,0.8781,0.8885,82.5
+fr,French,1-2 weeks,5,1-2 exposures,0,28593,0.8739,0.8799,81.74
+fr,French,1-2 weeks,5,3-4 exposures,1,37488,0.8738,0.8849,79.28
+fr,French,1-2 weeks,5,5-9 exposures,2,35399,0.875,0.8871,80.38
+fr,French,1-2 weeks,5,10-19 exposures,3,22296,0.882,0.8902,82.64
+fr,French,1-2 weeks,5,20+ exposures,4,19133,0.8826,0.8913,83.0
+fr,French,2-4 weeks,6,1-2 exposures,0,21881,0.8652,0.8725,80.84
+fr,French,2-4 weeks,6,3-4 exposures,1,30372,0.8625,0.8756,78.93
+fr,French,2-4 weeks,6,5-9 exposures,2,29252,0.8712,0.8823,80.25
+fr,French,2-4 weeks,6,10-19 exposures,3,17723,0.8779,0.8853,81.76
+fr,French,2-4 weeks,6,20+ exposures,4,13612,0.8783,0.886,82.24
+fr,French,1-3 months,7,1-2 exposures,0,17061,0.8449,0.8544,78.06
+fr,French,1-3 months,7,3-4 exposures,1,26631,0.8485,0.8613,77.66
+fr,French,1-3 months,7,5-9 exposures,2,24685,0.8624,0.8755,79.76
+fr,French,1-3 months,7,10-19 exposures,3,13591,0.8646,0.8747,80.24
+fr,French,1-3 months,7,20+ exposures,4,8358,0.8569,0.87,79.72
+fr,French,3+ months,8,1-2 exposures,0,6635,0.8216,0.8518,72.61
+fr,French,3+ months,8,3-4 exposures,1,9694,0.8393,0.8638,74.39
+fr,French,3+ months,8,5-9 exposures,2,9112,0.8521,0.8743,76.12
+fr,French,3+ months,8,10-19 exposures,3,4727,0.8592,0.8758,77.26
+fr,French,3+ months,8,20+ exposures,4,2322,0.8518,0.8694,75.58
+it,Italian,<1 hour,0,1-2 exposures,0,26513,0.9179,0.9205,88.33
+it,Italian,<1 hour,0,3-4 exposures,1,72773,0.9113,0.9146,86.98
+it,Italian,<1 hour,0,5-9 exposures,2,118970,0.9164,0.9172,87.57
+it,Italian,<1 hour,0,10-19 exposures,3,71225,0.9256,0.9264,87.66
+it,Italian,<1 hour,0,20+ exposures,4,48527,0.9329,0.9337,89.23
+it,Italian,1-6 hours,1,1-2 exposures,0,6544,0.8975,0.901,86.4
+it,Italian,1-6 hours,1,3-4 exposures,1,11645,0.9009,0.9022,84.92
+it,Italian,1-6 hours,1,5-9 exposures,2,12778,0.9033,0.9035,85.26
+it,Italian,1-6 hours,1,10-19 exposures,3,6696,0.9175,0.9165,86.57
+it,Italian,1-6 hours,1,20+ exposures,4,4959,0.9305,0.9333,89.39
+it,Italian,6-24 hours,2,1-2 exposures,0,15436,0.9032,0.9046,86.26
+it,Italian,6-24 hours,2,3-4 exposures,1,24755,0.8988,0.9017,83.98
+it,Italian,6-24 hours,2,5-9 exposures,2,24883,0.9049,0.9054,85.32
+it,Italian,6-24 hours,2,10-19 exposures,3,13004,0.9173,0.9168,86.1
+it,Italian,6-24 hours,2,20+ exposures,4,9835,0.9298,0.9307,88.7
+it,Italian,1-3 days,3,1-2 exposures,0,23411,0.9036,0.9073,86.29
+it,Italian,1-3 days,3,3-4 exposures,1,36601,0.8952,0.9023,83.17
+it,Italian,1-3 days,3,5-9 exposures,2,30841,0.9001,0.9019,83.89
+it,Italian,1-3 days,3,10-19 exposures,3,16824,0.9124,0.9153,86.12
+it,Italian,1-3 days,3,20+ exposures,4,12713,0.9253,0.9254,88.31
+it,Italian,3-7 days,4,1-2 exposures,0,19301,0.891,0.897,84.85
+it,Italian,3-7 days,4,3-4 exposures,1,28130,0.8915,0.9011,82.24
+it,Italian,3-7 days,4,5-9 exposures,2,22574,0.8934,0.9011,82.25
+it,Italian,3-7 days,4,10-19 exposures,3,11184,0.9043,0.9068,84.65
+it,Italian,3-7 days,4,20+ exposures,4,7703,0.9204,0.9221,87.51
+it,Italian,1-2 weeks,5,1-2 exposures,0,11455,0.8906,0.8972,84.68
+it,Italian,1-2 weeks,5,3-4 exposures,1,16764,0.8884,0.8975,82.06
+it,Italian,1-2 weeks,5,5-9 exposures,2,14711,0.8942,0.9011,82.1
+it,Italian,1-2 weeks,5,10-19 exposures,3,8237,0.9088,0.9105,84.73
+it,Italian,1-2 weeks,5,20+ exposures,4,5225,0.915,0.919,86.79
+it,Italian,2-4 weeks,6,1-2 exposures,0,7507,0.8853,0.8946,84.88
+it,Italian,2-4 weeks,6,3-4 exposures,1,10965,0.8871,0.9001,83.33
+it,Italian,2-4 weeks,6,5-9 exposures,2,9499,0.8867,0.8953,81.73
+it,Italian,2-4 weeks,6,10-19 exposures,3,5665,0.901,0.9023,84.57
+it,Italian,2-4 weeks,6,20+ exposures,4,3407,0.9044,0.9051,85.24
+it,Italian,1-3 months,7,1-2 exposures,0,3739,0.8716,0.8787,84.46
+it,Italian,1-3 months,7,3-4 exposures,1,7263,0.8782,0.8886,83.26
+it,Italian,1-3 months,7,5-9 exposures,2,6242,0.8875,0.892,83.07
+it,Italian,1-3 months,7,10-19 exposures,3,3790,0.9067,0.9052,84.67
+it,Italian,1-3 months,7,20+ exposures,4,1641,0.908,0.9055,83.0
+pt,Portuguese,<1 hour,0,1-2 exposures,0,14886,0.926,0.9293,90.17
+pt,Portuguese,<1 hour,0,3-4 exposures,1,26232,0.9224,0.9261,88.34
+pt,Portuguese,<1 hour,0,5-9 exposures,2,39947,0.9211,0.9261,88.38
+pt,Portuguese,<1 hour,0,10-19 exposures,3,23831,0.9199,0.9283,87.99
+pt,Portuguese,<1 hour,0,20+ exposures,4,21911,0.9186,0.925,88.65
+pt,Portuguese,1-6 hours,1,1-2 exposures,0,2623,0.8952,0.8979,86.69
+pt,Portuguese,1-6 hours,1,3-4 exposures,1,3834,0.9045,0.9052,84.35
+pt,Portuguese,1-6 hours,1,5-9 exposures,2,4124,0.9121,0.9142,86.57
+pt,Portuguese,1-6 hours,1,10-19 exposures,3,2325,0.8987,0.9105,85.38
+pt,Portuguese,1-6 hours,1,20+ exposures,4,1899,0.9181,0.9228,87.94
+pt,Portuguese,6-24 hours,2,1-2 exposures,0,6295,0.9091,0.9109,87.4
+pt,Portuguese,6-24 hours,2,3-4 exposures,1,7174,0.9001,0.9057,83.57
+pt,Portuguese,6-24 hours,2,5-9 exposures,2,7693,0.901,0.91,85.01
+pt,Portuguese,6-24 hours,2,10-19 exposures,3,4622,0.9119,0.9134,85.33
+pt,Portuguese,6-24 hours,2,20+ exposures,4,3516,0.9086,0.9184,86.95
+pt,Portuguese,1-3 days,3,1-2 exposures,0,11630,0.9018,0.906,86.13
+pt,Portuguese,1-3 days,3,3-4 exposures,1,11810,0.8923,0.9015,81.8
+pt,Portuguese,1-3 days,3,5-9 exposures,2,11100,0.8971,0.9046,83.45
+pt,Portuguese,1-3 days,3,10-19 exposures,3,5983,0.9039,0.9128,85.58
+pt,Portuguese,1-3 days,3,20+ exposures,4,4621,0.9048,0.9137,86.5
+pt,Portuguese,3-7 days,4,1-2 exposures,0,9826,0.8953,0.8996,85.7
+pt,Portuguese,3-7 days,4,3-4 exposures,1,9957,0.8849,0.8964,80.99
+pt,Portuguese,3-7 days,4,5-9 exposures,2,9759,0.8971,0.9042,82.1
+pt,Portuguese,3-7 days,4,10-19 exposures,3,5026,0.8928,0.9043,83.66
+pt,Portuguese,3-7 days,4,20+ exposures,4,3529,0.906,0.9151,86.4
+pt,Portuguese,1-2 weeks,5,1-2 exposures,0,5608,0.8872,0.8931,84.88
+pt,Portuguese,1-2 weeks,5,3-4 exposures,1,6036,0.878,0.8953,81.05
+pt,Portuguese,1-2 weeks,5,5-9 exposures,2,6119,0.887,0.8993,81.86
+pt,Portuguese,1-2 weeks,5,10-19 exposures,3,3453,0.8963,0.9061,84.62
+pt,Portuguese,1-2 weeks,5,20+ exposures,4,2441,0.912,0.918,86.97
+pt,Portuguese,2-4 weeks,6,1-2 exposures,0,4215,0.8767,0.8824,84.13
+pt,Portuguese,2-4 weeks,6,3-4 exposures,1,4095,0.8812,0.8964,82.91
+pt,Portuguese,2-4 weeks,6,5-9 exposures,2,4233,0.8791,0.8884,82.64
+pt,Portuguese,2-4 weeks,6,10-19 exposures,3,2764,0.901,0.9064,86.07
+pt,Portuguese,2-4 weeks,6,20+ exposures,4,1711,0.903,0.9008,86.03
+pt,Portuguese,1-3 months,7,1-2 exposures,0,3156,0.8594,0.8729,82.83
+pt,Portuguese,1-3 months,7,3-4 exposures,1,3751,0.8739,0.886,82.11
+pt,Portuguese,1-3 months,7,5-9 exposures,2,3801,0.8901,0.8945,83.79
+pt,Portuguese,1-3 months,7,10-19 exposures,3,2614,0.88,0.8964,83.01
+pt,Portuguese,1-3 months,7,20+ exposures,4,1048,0.8762,0.8849,81.39
+pt,Portuguese,3+ months,8,1-2 exposures,0,386,0.8765,0.8775,80.05
+pt,Portuguese,3+ months,8,3-4 exposures,1,812,0.867,0.8776,77.71
+pt,Portuguese,3+ months,8,5-9 exposures,2,670,0.8805,0.8791,79.55
+pt,Portuguese,3+ months,8,10-19 exposures,3,351,0.8649,0.8764,77.21
+pt,Portuguese,3+ months,8,20+ exposures,4,63,0.8791,0.8923,79.37

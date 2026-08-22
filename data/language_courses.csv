@@ -1,0 +1,9 @@
+course,ui_language,ui_language_name,learning_language,learning_language_name,n_traces,n_users,avg_session_recall,item_recall_rate,avg_lag_days,avg_prior_exposures
+es -> en,es,Spanish,en,English,3641179,31735,0.8963,0.9039,7.94,39.65
+en -> es,en,English,es,Spanish,3407689,31155,0.8985,0.9074,10.02,13.07
+en -> fr,en,English,fr,French,1873734,19947,0.8827,0.893,8.18,19.46
+en -> de,en,English,de,German,1452597,14383,0.8928,0.9051,11.08,11.96
+pt -> en,pt,Portuguese,en,English,949460,8637,0.8987,0.9073,7.14,20.96
+en -> it,en,English,it,Italian,793935,6498,0.9086,0.9117,3.82,10.23
+it -> en,it,Italian,en,English,424152,3436,0.9096,0.9137,5.76,18.36
+en -> pt,en,English,pt,Portuguese,311480,2709,0.9055,0.9121,5.84,12.86
