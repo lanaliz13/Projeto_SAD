@@ -3,6 +3,8 @@ import pandas as pd
 
 
 def obter_coluna(df, opcoes):
+    if df is None or df.empty:
+        return None
     for coluna in opcoes:
         if coluna in df.columns:
             return coluna
@@ -10,11 +12,12 @@ def obter_coluna(df, opcoes):
 
 
 def normalizar_tempo(dias):
-    return min(max(float(dias) / 30, 0), 1)
+    # Considera 14 dias sem prática como limite máximo de risco (100% do fator tempo)
+    return min(max(float(dias) / 14.0, 0.0), 1.0)
 
 
 def normalizar_exposicoes(exposicoes):
-    return 1 - min(max(float(exposicoes) / 10, 0), 1)
+    return 1.0 - min(max(float(exposicoes) / 10.0, 0.0), 1.0)
 
 
 def calcular_indice_prioridade(
@@ -23,29 +26,30 @@ def calcular_indice_prioridade(
     exposicoes,
     dificuldade
 ):
-    recall = min(max(float(recall), 0), 1)
-    dificuldade = min(max(float(dificuldade), 0), 1)
+    recall = min(max(float(recall), 0.0), 1.0)
+    dificuldade = min(max(float(dificuldade), 0.0), 1.0)
 
-    risco_recall = 1 - recall
+    risco_recall = 1.0 - recall
     fator_tempo = normalizar_tempo(dias_sem_pratica)
     fator_exposicoes = normalizar_exposicoes(exposicoes)
 
+    # Recalibragem de pesos para dar maior sensibilidade ao risco e tempo sem prática
     indice = (
-        0.40 * risco_recall
-        + 0.30 * fator_tempo
-        + 0.15 * fator_exposicoes
-        + 0.15 * dificuldade
-    ) * 100
+        0.55 * risco_recall
+        + 0.25 * fator_tempo
+        + 0.10 * fator_exposicoes
+        + 0.10 * dificuldade
+    ) * 100.0
 
-    return round(min(max(indice, 0), 100), 1)
+    return round(min(max(indice, 0.0), 100.0), 1)
 
 
 def classificar_prioridade(indice):
-    if indice <= 30:
+    if indice <= 30.0:
         return "Baixa"
-    if indice <= 60:
+    if indice <= 60.0:
         return "Média"
-    if indice <= 80:
+    if indice <= 80.0:
         return "Alta"
     return "Crítica"
 
@@ -66,7 +70,7 @@ def obter_recomendacao(prioridade):
         ),
         "Crítica": (
             "Realizar a revisão o quanto antes. "
-            "O conteúdo apresenta prioridade crítica."
+            "O conteúdo apresenta prioridade crítica e alto risco de esquecimento."
         )
     }
     return recomendacoes.get(
@@ -82,13 +86,16 @@ def estimar_recall_cenario(
     exposicoes,
     recall_historico=0.85
 ):
-    if curve.empty:
-        return recall_historico
+    if curve is None or curve.empty:
+        # Modelo téorico simples caso não haja registros no dataset
+        decay = np.exp(-0.05 * dias_sem_pratica)
+        recall_est = max(0.2, min(0.95, decay + 0.05 * min(exposicoes, 10)))
+        return recall_est
 
     df = curve.copy()
 
     if idioma != "Todos" and "idioma" in df.columns:
-        filtrado = df[df["idioma"].astype(str) == str(idioma)]
+        filtrado = df[df["idioma"].astype(str).str.lower() == str(idioma).lower()]
         if not filtrado.empty:
             df = filtrado
 
@@ -118,8 +125,9 @@ def estimar_recall_cenario(
     if dados.empty:
         return recall_historico
 
-    lag_max = max(float(dados[lag_col].max()), 1)
-    exposure_max = max(float(dados[exposure_col].max()), 1)
+    # Penalização de decay para dias muito altos
+    lag_max = max(float(dados[lag_col].max()), 1.0)
+    exposure_max = max(float(dados[exposure_col].max()), 1.0)
 
     dados = dados.copy()
     dados["distancia"] = (
@@ -130,12 +138,11 @@ def estimar_recall_cenario(
     linha = dados.loc[dados["distancia"].idxmin()]
     recall_base = float(linha[recall_col])
 
-    recall_estimado = (
-        0.80 * recall_base
-        + 0.20 * recall_historico
-    )
+    # Se estiver muitos dias sem prática, aplica decaimento extra
+    fator_decaimento = np.exp(-0.02 * max(0, dias_sem_pratica - 7))
+    recall_estimado = recall_base * fator_decaimento
 
-    return min(max(recall_estimado, 0), 1)
+    return min(max(recall_estimado, 0.15), 0.98)
 
 
 def calcular_dificuldade_palavra(
@@ -143,13 +150,13 @@ def calcular_dificuldade_palavra(
     idioma="Todos",
     palavra=None
 ):
-    if words.empty:
+    if words is None or words.empty:
         return 0.5, "Média geral"
 
     df = words.copy()
 
     if idioma != "Todos" and "idioma" in df.columns:
-        filtrado = df[df["idioma"].astype(str) == str(idioma)]
+        filtrado = df[df["idioma"].astype(str).str.lower() == str(idioma).lower()]
         if not filtrado.empty:
             df = filtrado
 
@@ -173,9 +180,9 @@ def calcular_dificuldade_palavra(
             ]
             if not resultado.empty:
                 recall = resultado[recall_col].mean()
-                dificuldade = 1 - recall
+                dificuldade = 1.0 - recall
                 return (
-                    float(min(max(dificuldade, 0), 1)),
+                    float(min(max(dificuldade, 0.0), 1.0)),
                     str(palavra)
                 )
 
@@ -183,9 +190,9 @@ def calcular_dificuldade_palavra(
     if pd.isna(recall_medio):
         return 0.5, "Média geral"
 
-    dificuldade = 1 - recall_medio
+    dificuldade = 1.0 - recall_medio
     return (
-        float(min(max(dificuldade, 0), 1)),
+        float(min(max(dificuldade, 0.0), 1.0)),
         "Média do idioma"
     )
 
@@ -195,7 +202,7 @@ def calcular_prioridades_conteudos(
     tempo_padrao=14,
     exposicoes_padrao=5
 ):
-    if words.empty:
+    if words is None or words.empty:
         return pd.DataFrame()
 
     df = words.copy()
@@ -213,7 +220,7 @@ def calcular_prioridades_conteudos(
         .fillna(pd.to_numeric(df[recall_col], errors="coerce").mean())
     )
 
-    df["dificuldade"] = 1 - df["recall_utilizado"]
+    df["dificuldade"] = 1.0 - df["recall_utilizado"]
 
     df["indice_prioridade"] = df.apply(
         lambda linha: calcular_indice_prioridade(
