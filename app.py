@@ -208,14 +208,17 @@ elif pagina == "Consulta de Pesquisa":
         recall_col = obter_recall_col(df)
 
         if not df.empty and lag_col and recall_col:
-            res = df.groupby(lag_col, as_index=False)[recall_col].mean()
+            ordem_lag = ["<1 hour", "1-6 hours", "6-24 hours", "1-3 days", "3-7 days", "1-2 weeks", "2-4 weeks", "1-3 months", "3+ months"]
+            df[lag_col] = pd.Categorical(df[lag_col], categories=ordem_lag, ordered=True)
+            res = df.groupby(lag_col, as_index=False, observed=False)[recall_col].mean()
+
             fig = px.line(
                 res, x=lag_col, y=recall_col, markers=True,
-                title=f"Taxa de Acerto x Tempo Sem Prática — {idioma}",
+                title=f"Curva de Retenção pelo Tempo sem Prática — {idioma}",
                 color_discrete_sequence=['#fb7185'], template="plotly_dark"
             )
-            fig.add_hline(y=meta_recall, line_dash="dash", line_color="#34d399", annotation_text="Meta (85%)")
-            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis_tickformat='.0%', yaxis_title="Taxa de Acerto", xaxis_title="Dias / Intervalo Sem Prática")
+            fig.add_hline(y=meta_recall, line_dash="dash", line_color="#34d399", annotation_text="Meta Global (85%)")
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis_tickformat='.0%', yaxis_title="Taxa de Acerto", xaxis_title="Intervalo Sem Prática")
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("Dados não encontrados para o filtro selecionado.")
@@ -230,10 +233,13 @@ elif pagina == "Consulta de Pesquisa":
         recall_col = obter_recall_col(df)
 
         if not df.empty and exp_col and recall_col:
-            res = df.groupby(exp_col, as_index=False)[recall_col].mean()
+            ordem_exposicoes = ["1-2 exposures", "3-4 exposures", "5-9 exposures", "10-19 exposures", "20+ exposures"]
+            df[exp_col] = pd.Categorical(df[exp_col], categories=ordem_exposicoes, ordered=True)
+            res = df.groupby(exp_col, as_index=False, observed=False)[recall_col].mean()
+
             fig = px.bar(
                 res, x=exp_col, y=recall_col, text_auto='.1%',
-                title=f"Retenção Média por Faixa de Revisões Anteriores — {idioma}",
+                title=f"Impacto das Exposições Anteriores no Recall — {idioma}",
                 color_discrete_sequence=['#60a5fa'], template="plotly_dark"
             )
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis_tickformat='.0%', yaxis_title="Taxa de Acerto", xaxis_title="Número de Revisões Anteriores")
@@ -313,12 +319,12 @@ elif pagina == "Análise por Idioma":
 # --- ESQUECIMENTO ---
 elif pagina == "Esquecimento":
     cabecalho("Matriz de Esquecimento", "Como a retenção cai conforme o tempo sem prática aumenta.")
-    
+
     explicacao_grafico(
         "Taxa de Retenção por Intervalo de Estudo",
         "Este gráfico mostra a taxa média de acertos em função dos dias sem praticar. A barra fica em tom de alerta (vermelho/laranja) quando a retenção fica abaixo do limite aceitável."
     )
-    
+
     idioma = st.selectbox("Idioma", ["Todos"] + idiomas)
     df = filtrar_idioma(curve, idioma) if idioma != "Todos" else curve
 
@@ -326,7 +332,7 @@ elif pagina == "Esquecimento":
     recall_col = obter_recall_col(df)
 
     if not df.empty and lag_col and recall_col:
-        res = df.groupby(lag_col, as_index=False)[recall_col].mean()
+        res = df.groupby(lag_col, as_index=False, observed=False)[recall_col].mean()
         fig = px.bar(
             res, x=lag_col, y=recall_col, text_auto='.1%',
             title=f"Retenção Média x Intervalo Sem Prática — {idioma}",
@@ -334,7 +340,7 @@ elif pagina == "Esquecimento":
             template="plotly_dark"
         )
         fig.add_hline(y=meta_recall, line_dash="dash", line_color="#34d399", annotation_text="Meta (85%)")
-        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis_tickformat='.0%', yaxis_title="Taxa de Acerto", xaxis_title="Dias / Faixa Sem Prática")
+        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis_tickformat='.0%', yaxis_title="Taxa de Acerto", xaxis_title="Intervalo Sem Prática")
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("Registros insuficientes para a Matriz de Esquecimento neste filtro.")
@@ -342,12 +348,12 @@ elif pagina == "Esquecimento":
 # --- REVISÕES ---
 elif pagina == "Revisões":
     cabecalho("Análise Avançada de Revisões", "Comportamento da retenção sob diferentes frequências de repetição.")
-    
+
     explicacao_grafico(
         "Curva de Aprendizado por Prática",
         "A linha mostra que a curva de retenção sobe à medida que o histórico de treinos aumenta. Isso comprova a eficácia da repetição espaçada no aprendizado."
     )
-    
+
     idioma = st.selectbox("Idioma", ["Todos"] + idiomas)
     df = filtrar_idioma(curve, idioma) if idioma != "Todos" else curve
 
@@ -355,10 +361,10 @@ elif pagina == "Revisões":
     recall_col = obter_recall_col(df)
 
     if not df.empty and exp_col and recall_col:
-        res = df.groupby(exp_col, as_index=False)[recall_col].mean()
+        res = df.groupby(exp_col, as_index=False, observed=False)[recall_col].mean()
         fig = px.line(
             res, x=exp_col, y=recall_col, markers=True,
-            title=f"Evolução da Retenção conforme o Histórico de Revisão — {idioma}",
+            title=f"Evolução da Retenção por Histórico de Treino — {idioma}",
             color_discrete_sequence=['#8b5cf6']
         )
         fig.update_traces(line=dict(width=3), marker=dict(size=10))
@@ -374,12 +380,12 @@ elif pagina == "Revisões":
 # --- DIFICULDADES ---
 elif pagina == "Dificuldades":
     cabecalho("Mapeamento de Dificuldades", "Ranking de palavras que apresentam a maior taxa de erro dos alunos.")
-    
+
     explicacao_grafico(
         "Mapeamento do Vocabulário Crítico",
         "Em vez de pontos amontoados, este gráfico lista de forma simples as palavras com maior taxa de erro (100% - taxa de acerto). A linha pontilhada indica o limite crítico tolerável de erro."
     )
-    
+
     idioma = st.selectbox("Idioma", ["Todos"] + idiomas)
     df = filtrar_idioma(words, idioma) if idioma != "Todos" else words
 
@@ -484,13 +490,13 @@ elif pagina == "Decisões":
         with c4: caixa_metrica("Prioridade Baixa", str(baixa), "Retenção sob controle")
 
         secao("Visão Geral de Distribuição da Base")
-        
+
         col_graf1, col_graf2 = st.columns([1, 1])
 
         with col_graf1:
             counts = prio_df["prioridade"].value_counts().reset_index()
             counts.columns = ["Prioridade", "Quantidade"]
-            
+
             fig_donut = px.pie(
                 counts, names="Prioridade", values="Quantidade",
                 title=f"Proporção por Categoria de Risco — {idioma}",
@@ -521,12 +527,12 @@ elif pagina == "Decisões":
         palavra_col = obter_nome_palavra(prio_df)
         if palavra_col:
             ranking = prio_df.sort_values("indice_prioridade", ascending=False).head(quantidade_prioridades).copy()
-            
+
             colunas_exibir = [palavra_col, "idioma", "classe_gramatical", "recall_utilizado", "dificuldade", "indice_prioridade", "prioridade"]
             colunas_existentes = [c for c in colunas_exibir if c in ranking.columns]
-            
+
             tabela_exibicao = ranking[colunas_existentes].copy()
-            
+
             if "recall_utilizado" in tabela_exibicao.columns:
                 tabela_exibicao["recall_utilizado"] = (tabela_exibicao["recall_utilizado"] * 100).round(1).astype(str) + "%"
             if "dificuldade" in tabela_exibicao.columns:
