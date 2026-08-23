@@ -4,26 +4,42 @@ import streamlit as st
 
 
 def obter_coluna(df, opcoes):
+    if df is None or df.empty:
+        return None
     for coluna in opcoes:
         if coluna in df.columns:
             return coluna
     return None
 
 
-def adicionar_coluna_idioma(df):
-    coluna_idioma = obter_coluna(
-        df,
-        [
-            "learning_language_name",
-            "learning_language",
-            "language_name",
-            "language"
-        ]
-    )
+def padronizar_idiomas(df):
+    if df is None or df.empty:
+        return df
 
-    if coluna_idioma is not None:
-        df["idioma"] = df[coluna_idioma].astype(str)
+    # Mapeamento para garantir consistência entre códigos ('de') e nomes ('German')
+    mapa_codigos = {
+        'de': 'German',
+        'en': 'English',
+        'es': 'Spanish',
+        'fr': 'French',
+        'it': 'Italian',
+        'pt': 'Portuguese',
+        'all': 'All languages'
+    }
 
+    # 1. Tenta pegar coluna com nome completo
+    col_nome = obter_coluna(df, ['language_name', 'learning_language_name', 'ui_language_name'])
+    if col_nome:
+        df['idioma'] = df[col_nome].astype(str)
+        return df
+
+    # 2. Tenta pegar coluna com código ISO
+    col_codigo = obter_coluna(df, ['learning_language', 'language', 'ui_language'])
+    if col_codigo:
+        df['idioma'] = df[col_codigo].astype(str).map(lambda x: mapa_codigos.get(x, x))
+        return df
+
+    df['idioma'] = 'Todos'
     return df
 
 
@@ -31,6 +47,10 @@ def adicionar_coluna_idioma(df):
 def carregar_dados():
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     data_dir = os.path.join(base_dir, "data")
+
+    # Tratamento de diretório flexível
+    if not os.path.exists(data_dir):
+        data_dir = base_dir
 
     caminhos = {
         "traces": os.path.join(data_dir, "learning_traces_sample.csv"),
@@ -40,23 +60,22 @@ def carregar_dados():
     }
 
     dados = {}
-
     for nome, caminho in caminhos.items():
         if os.path.exists(caminho):
-            dados[nome] = pd.read_csv(caminho)
+            try:
+                dados[nome] = pd.read_csv(caminho)
+            except Exception:
+                dados[nome] = pd.DataFrame()
         else:
             dados[nome] = pd.DataFrame()
 
-    traces = adicionar_coluna_idioma(dados["traces"])
-    courses = adicionar_coluna_idioma(dados["courses"])
-    curve = adicionar_coluna_idioma(dados["curve"])
-    words = adicionar_coluna_idioma(dados["words"])
+    traces = padronizar_idiomas(dados["traces"])
+    courses = padronizar_idiomas(dados["courses"])
+    curve = padronizar_idiomas(dados["curve"])
+    words = padronizar_idiomas(dados["words"])
 
-    if "practice_time" in traces.columns:
-        traces["practice_time"] = pd.to_datetime(
-            traces["practice_time"],
-            errors="coerce"
-        )
+    if not traces.empty and "practice_time" in traces.columns:
+        traces["practice_time"] = pd.to_datetime(traces["practice_time"], errors="coerce")
 
     pos_map = {
         "vblex": "Verbo",
@@ -70,17 +89,12 @@ def carregar_dados():
         "det": "Determinante",
         "prn": "Pronome",
         "num": "Numeral",
-        "cnjcoo": "Conjunção coordenativa",
-        "cnjsub": "Conjunção subordinativa"
+        "cnjcoo": "Conjunção",
+        "cnjsub": "Conjunção"
     }
 
-    if "pos" in words.columns:
-        words["classe_gramatical"] = (
-            words["pos"]
-            .map(pos_map)
-            .fillna(words["pos"])
-            .fillna("Não informada")
-        )
+    if not words.empty and "pos" in words.columns:
+        words["classe_gramatical"] = words["pos"].map(pos_map).fillna(words["pos"]).fillna("Outros")
 
     return {
         "traces": traces,
