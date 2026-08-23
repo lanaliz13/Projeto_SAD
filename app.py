@@ -170,7 +170,7 @@ if pagina == "Visão Geral":
                 xaxis_title="Taxa de Recall",
                 yaxis_title="Frequência"
             )
-            st.plotly_chart(fig_overview, use_container_width=True)
+            st.plotly_chart(fig_overview, width="stretch")
 
 # --- CONSULTA DE PESQUISA ---
 elif pagina == "Consulta de Pesquisa":
@@ -180,7 +180,6 @@ elif pagina == "Consulta de Pesquisa":
         "Como o tempo sem prática afeta a retenção?",
         "Mais revisões melhoram o recall?",
         "Quais palavras são mais difíceis de aprender?",
-        "Quais classes gramaticais geram mais erros?"
     ])
     idioma = st.selectbox("Idioma", ["Todos"] + idiomas)
 
@@ -190,15 +189,55 @@ elif pagina == "Consulta de Pesquisa":
         recall_col = obter_recall_col(df)
 
         if not df.empty and lag_col and recall_col:
-            res = df.groupby(lag_col, as_index=False)[recall_col].mean()
-            fig = px.line(
-                res, x=lag_col, y=recall_col, markers=True,
-                title=f"Curva de Retenção pelo Tempo sem Prática — {idioma}",
-                color_discrete_sequence=['#fb7185'], template="plotly_dark"
+
+            ordem_lag = [
+                "<1 hour",
+                "1-6 hours",
+                "6-24 hours",
+                "1-3 days",
+                "3-7 days",
+                "1-2 weeks",
+                "2-4 weeks",
+                "1-3 months",
+                "3+ months"
+            ]
+
+            df[lag_col] = pd.Categorical(
+                df[lag_col],
+                categories=ordem_lag,
+                ordered=True
             )
-            fig.add_hline(y=meta_recall, line_dash="dash", line_color="#34d399", annotation_text="Meta Global")
-            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis_tickformat='.0%')
-            st.plotly_chart(fig, use_container_width=True)
+
+            res = df.groupby(
+                lag_col,
+                as_index=False,
+                observed=False
+            )[recall_col].mean()
+
+            fig = px.line(
+                res,
+                x=lag_col,
+                y=recall_col,
+                markers=True,
+                title=f"Curva de Retenção pelo Tempo sem Prática — {idioma}",
+                color_discrete_sequence=['#fb7185'],
+                template="plotly_dark"
+            )
+
+            fig.add_hline(
+                y=meta_recall,
+                line_dash="dash",
+                line_color="#34d399",
+                annotation_text="Meta Global"
+            )
+
+            fig.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                yaxis_tickformat='.0%'
+            )
+
+            st.plotly_chart(fig, width="stretch")
         else:
             st.warning("Dados não encontrados para o filtro selecionado.")
 
@@ -208,14 +247,43 @@ elif pagina == "Consulta de Pesquisa":
         recall_col = obter_recall_col(df)
 
         if not df.empty and exp_col and recall_col:
-            res = df.groupby(exp_col, as_index=False)[recall_col].mean()
-            fig = px.bar(
-                res, x=exp_col, y=recall_col,
-                title=f"Impacto das Exposições Anteriores no Recall — {idioma}",
-                color_discrete_sequence=['#60a5fa'], template="plotly_dark"
+
+            ordem_exposicoes = [
+                "1-2 exposures",
+                "3-4 exposures",
+                "5-9 exposures",
+                "10-19 exposures",
+                "20+ exposures"
+            ]
+
+            df[exp_col] = pd.Categorical(
+                df[exp_col],
+                categories=ordem_exposicoes,
+                ordered=True
             )
-            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis_tickformat='.0%')
-            st.plotly_chart(fig, use_container_width=True)
+
+            res = df.groupby(
+                exp_col,
+                as_index=False,
+                observed=False
+            )[recall_col].mean()
+
+            fig = px.bar(
+                res,
+                x=exp_col,
+                y=recall_col,
+                title=f"Impacto das Exposições Anteriores no Recall — {idioma}",
+                color_discrete_sequence=['#60a5fa'],
+                template="plotly_dark"
+            )
+
+            fig.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                yaxis_tickformat='.0%'
+            )
+
+            st.plotly_chart(fig, width="stretch")
         else:
             st.warning("Dados não encontrados para o filtro selecionado.")
 
@@ -231,28 +299,10 @@ elif pagina == "Consulta de Pesquisa":
                 color=recall_col, color_continuous_scale='Reds_r', template="plotly_dark"
             )
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_tickformat='.0%', yaxis={'categoryorder': 'total descending'})
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         else:
             st.warning("Dados não encontrados para o filtro selecionado.")
 
-    elif pergunta == "Quais classes gramaticais geram mais erros?":
-        df = filtrar_idioma(words, idioma) if idioma != "Todos" else words
-        recall_col = obter_recall_col(df)
-
-        if not df.empty and "classe_gramatical" in df.columns and recall_col:
-            res = df.groupby("classe_gramatical", as_index=False)[recall_col].mean()
-            res["taxa_erro"] = 1 - res[recall_col]
-            res = res.sort_values("taxa_erro", ascending=False)
-
-            fig = px.pie(
-                res, names="classe_gramatical", values="taxa_erro",
-                title=f"Proporção de Erro por Classe Gramatical — {idioma}",
-                hole=0.4, template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Pastel
-            )
-            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.warning("Dados não encontrados para o filtro selecionado.")
 
 # --- ANÁLISE POR IDIOMA ---
 elif pagina == "Análise por Idioma":
@@ -278,7 +328,7 @@ elif pagina == "Análise por Idioma":
                          color_continuous_scale='Purples_r', template='plotly_dark',
                          title=f"Top {len(top_crit)} Palavras com Menor Retenção")
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis={'categoryorder': 'total descending'})
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
 # --- ESQUECIMENTO ---
 elif pagina == "Esquecimento":
@@ -291,47 +341,151 @@ elif pagina == "Esquecimento":
     recall_col = obter_recall_col(df)
 
     if not df.empty and lag_col and exp_col and recall_col:
-        pivot_df = df.pivot_table(index=exp_col, columns=lag_col, values=recall_col, aggfunc='mean')
+
+        ordem_lag = [
+            "<1 hour",
+            "1-6 hours",
+            "6-24 hours",
+            "1-3 days",
+            "3-7 days",
+            "1-2 weeks",
+            "2-4 weeks",
+            "1-3 months",
+            "3+ months"
+        ]
+
+        ordem_exposicoes = [
+            "1-2 exposures",
+            "3-4 exposures",
+            "5-9 exposures",
+            "10-19 exposures",
+            "20+ exposures"
+        ]
+
+        df[lag_col] = pd.Categorical(
+            df[lag_col],
+            categories=ordem_lag,
+            ordered=True
+        )
+
+        df[exp_col] = pd.Categorical(
+            df[exp_col],
+            categories=ordem_exposicoes,
+            ordered=True
+        )
+
+        pivot_df = df.pivot_table(
+            index=exp_col,
+            columns=lag_col,
+            values=recall_col,
+            aggfunc="mean",
+            observed=False
+        )
+
         fig = px.imshow(
             pivot_df,
-            labels=dict(x="Intervalo sem Prática", y="Faixa de Exposições", color="Recall"),
-            x=pivot_df.columns, y=pivot_df.index,
+            labels=dict(
+                x="Intervalo sem Prática",
+                y="Faixa de Exposições",
+                color="Recall"
+            ),
+            x=pivot_df.columns,
+            y=pivot_df.index,
             color_continuous_scale="Viridis",
             template="plotly_dark",
             aspect="auto"
         )
-        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', title=f"Heatmap de Retenção — {idioma}")
-        st.plotly_chart(fig, use_container_width=True)
+
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            title=f"Heatmap de Retenção — {idioma}"
+        )
+
+        st.plotly_chart(fig, width="stretch")
+
     else:
-        st.info("Registros insuficientes para formar a Matriz de Esquecimento neste filtro.")
+        st.info(
+            "Registros insuficientes para formar a Matriz de Esquecimento neste filtro."
+        )
 
 # --- REVISÕES ---
 elif pagina == "Revisões":
-    cabecalho("Análise Avançada de Revisões", "Comportamento da retenção sob diferentes frequências de repetição.")
+    cabecalho(
+        "Análise Avançada de Revisões",
+        "Comportamento da retenção sob diferentes frequências de repetição."
+    )
+
     idioma = st.selectbox("Idioma", ["Todos"] + idiomas)
     df = filtrar_idioma(curve, idioma) if idioma != "Todos" else curve
 
-    exp_col = obter_coluna(df, ["practice_bin", "avg_prior_exposures", "prior_exposures", "exposures"])
+    exp_col = obter_coluna(
+        df,
+        ["practice_bin", "avg_prior_exposures", "prior_exposures", "exposures"]
+    )
     recall_col = obter_recall_col(df)
 
     if not df.empty and exp_col and recall_col:
-        res = df.groupby(exp_col, as_index=False)[recall_col].agg(['mean', 'std']).reset_index().dropna()
+
+        ordem_exposicoes = [
+            "1-2 exposures",
+            "3-4 exposures",
+            "5-9 exposures",
+            "10-19 exposures",
+            "20+ exposures"
+        ]
+
+        df[exp_col] = pd.Categorical(
+            df[exp_col],
+            categories=ordem_exposicoes,
+            ordered=True
+        )
+
+        res = (
+            df.groupby(
+                exp_col,
+                as_index=False,
+                observed=False
+            )[recall_col]
+            .agg(["mean", "std"])
+            .reset_index()
+            .dropna()
+        )
+
         fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=res[exp_col], y=res['mean'],
-            error_y=dict(type='data', array=res['std'], visible=True),
-            mode='lines+markers', name='Recall Médio ± Desvio',
-            line=dict(color='#8b5cf6', width=3),
-            marker=dict(size=8)
-        ))
+
+        fig.add_trace(
+            go.Scatter(
+                x=res[exp_col],
+                y=res["mean"],
+                error_y=dict(
+                    type="data",
+                    array=res["std"],
+                    visible=True
+                ),
+                mode="lines+markers",
+                name="Recall Médio ± Desvio",
+                line=dict(color="#8b5cf6", width=3),
+                marker=dict(size=8)
+            )
+        )
+
         fig.update_layout(
             title=f"Estabilidade da Retenção por Nível de Revisão — {idioma}",
-            xaxis_title="Faixa de Prática / Exposições", yaxis_title="Recall Médio",
-            template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)'
+            xaxis_title="Faixa de Prática / Exposições",
+            yaxis_title="Recall Médio",
+            template="plotly_dark",
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            yaxis_tickformat=".0%"
         )
-        st.plotly_chart(fig, use_container_width=True)
+
+        st.plotly_chart(fig, width="stretch")
+
     else:
-        st.info("Registros insuficientes para a Análise de Revisões neste filtro.")
+        st.info(
+            "Registros insuficientes para a Análise de Revisões neste filtro."
+        )
 
 # --- DIFICULDADES ---
 elif pagina == "Dificuldades":
@@ -373,7 +527,7 @@ elif pagina == "Dificuldades":
             xaxis_title=x_label,
             yaxis_tickformat='.0%'
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
     else:
         st.info("Dados de palavras indisponíveis para o idioma selecionado.")
 
@@ -389,7 +543,7 @@ elif pagina == "Simulador de Prioridade":
         exposicoes = st.number_input("Exposições anteriores", 0, 100, 5)
         recall_minimo = st.slider("Recall mínimo desejado", 50, 100, 85) / 100
 
-    if st.button("🔍 Calcular Prioridade de Revisão", use_container_width=True):
+    if st.button("🔍 Calcular Prioridade de Revisão", width="stretch"):
         recall_est = estimar_recall_cenario(curve, idioma, dias_sem_pratica, exposicoes, recall_minimo)
         dif, orig = calcular_dificuldade_palavra(words, idioma)
         indice = calcular_indice_prioridade(recall_est, dias_sem_pratica, exposicoes, dif)
@@ -414,7 +568,7 @@ elif pagina == "Simulador de Prioridade":
             }
         ))
         fig_gauge.update_layout(paper_bgcolor='rgba(0,0,0,0)', font={'color': "white"}, template="plotly_dark")
-        st.plotly_chart(fig_gauge, use_container_width=True)
+        st.plotly_chart(fig_gauge, width="stretch")
 
 # --- DECISÕES ---
 elif pagina == "Decisões":
@@ -440,7 +594,7 @@ elif pagina == "Decisões":
             template="plotly_dark"
         )
         fig_donut.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-        st.plotly_chart(fig_donut, use_container_width=True)
+        st.plotly_chart(fig_donut, width="stretch")
     else:
         st.warning("Não foi possível calcular a distribuição de prioridades para este filtro.")
 
