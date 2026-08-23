@@ -184,7 +184,7 @@ if pagina == "Visão Geral":
                 yaxis_title="Frequência na Base",
                 xaxis_tickformat='.0%'
             )
-            st.plotly_chart(fig_overview, use_container_width=True)
+            st.plotly_chart(fig_overview, width="stretch")
 
 # --- CONSULTA DE PESQUISA ---
 elif pagina == "Consulta de Pesquisa":
@@ -219,7 +219,7 @@ elif pagina == "Consulta de Pesquisa":
             )
             fig.add_hline(y=meta_recall, line_dash="dash", line_color="#34d399", annotation_text="Meta Global (85%)")
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis_tickformat='.0%', yaxis_title="Taxa de Acerto", xaxis_title="Intervalo Sem Prática")
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         else:
             st.warning("Dados não encontrados para o filtro selecionado.")
 
@@ -243,7 +243,7 @@ elif pagina == "Consulta de Pesquisa":
                 color_discrete_sequence=['#60a5fa'], template="plotly_dark"
             )
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis_tickformat='.0%', yaxis_title="Taxa de Acerto", xaxis_title="Número de Revisões Anteriores")
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         else:
             st.warning("Dados não encontrados para o filtro selecionado.")
 
@@ -263,7 +263,7 @@ elif pagina == "Consulta de Pesquisa":
                 color=recall_col, color_continuous_scale='Reds_r', template="plotly_dark"
             )
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_tickformat='.0%', xaxis_title="Taxa de Acerto (Menor = Mais Difícil)", yaxis_title="Palavra", yaxis={'categoryorder': 'total descending'})
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         else:
             st.warning("Dados não encontrados para o filtro selecionado.")
 
@@ -286,7 +286,7 @@ elif pagina == "Consulta de Pesquisa":
                 hole=0.4, template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Pastel
             )
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         else:
             st.warning("Dados não encontrados para o filtro selecionado.")
 
@@ -314,36 +314,85 @@ elif pagina == "Análise por Idioma":
                          color_continuous_scale='Purples_r', template='plotly_dark',
                          title=f"Top {len(top_crit)} Palavras com Menor Retenção em {idioma}")
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_tickformat='.0%', yaxis={'categoryorder': 'total descending'})
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
 # --- ESQUECIMENTO ---
 elif pagina == "Esquecimento":
-    cabecalho("Matriz de Esquecimento", "Como a retenção cai conforme o tempo sem prática aumenta.")
-
-    explicacao_grafico(
-        "Taxa de Retenção por Intervalo de Estudo",
-        "Este gráfico mostra a taxa média de acertos em função dos dias sem praticar. A barra fica em tom de alerta (vermelho/laranja) quando a retenção fica abaixo do limite aceitável."
+    cabecalho(
+        "Análise e Diagnóstico de Esquecimento",
+        "Mapeamento da perda de retenção ao longo do tempo e identificação de conteúdos em estado crítico."
     )
 
-    idioma = st.selectbox("Idioma", ["Todos"] + idiomas)
-    df = filtrar_idioma(curve, idioma) if idioma != "Todos" else curve
+    explicacao_grafico(
+        "Diagnóstico da Curva do Esquecimento",
+        "A retenção cai à medida que os dias passam sem revisão. O sistema identifica automaticamente as faixas onde a retenção cai abaixo do limite crítico para que a intervenção seja imediata."
+    )
 
+    c_esq1, c_esq2 = st.columns(2)
+    with c_esq1:
+        idioma = st.selectbox("Idioma para análise", ["Todos"] + idiomas, key="esq_lang")
+    with c_esq2:
+        dias_corte = st.slider("Dias sem prática para alerta crítico", 7, 60, 14, key="esq_dias")
+
+    df = filtrar_idioma(curve, idioma) if idioma != "Todos" else curve
     lag_col = obter_coluna(df, ["lag_bin", "lag_days", "avg_lag_days"])
     recall_col = obter_recall_col(df)
 
     if not df.empty and lag_col and recall_col:
         res = df.groupby(lag_col, as_index=False, observed=False)[recall_col].mean()
+
+        res["status_risco"] = res[recall_col].apply(
+            lambda r: "Crítico" if r < limite_critico else ("Atenção" if r < meta_recall else "Seguro")
+        )
+
+        qtd_criticos = len(res[res["status_risco"] == "Crítico"])
+        qtd_atencao = len(res[res["status_risco"] == "Atenção"])
+        retencao_minima = res[recall_col].min()
+
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            caixa_metrica("Faixas Críticas", str(qtd_criticos), "Abaixo do limite crítico")
+        with m2:
+            caixa_metrica("Faixas em Atenção", str(qtd_atencao), "Abaixo da meta global")
+        with m3:
+            caixa_metrica("Pior Retenção Observada", percentual(retencao_minima), "Menor taxa de acerto")
+
         fig = px.bar(
             res, x=lag_col, y=recall_col, text_auto='.1%',
-            title=f"Retenção Média x Intervalo Sem Prática — {idioma}",
-            color=recall_col, color_continuous_scale="Reds_r",
+            color="status_risco",
+            color_discrete_map={"Crítico": "#ff4d67", "Atenção": "#f59e0b", "Seguro": "#34d399"},
+            title=f"Taxa de Retenção por Intervalo de Estudo — {idioma}",
             template="plotly_dark"
         )
         fig.add_hline(y=meta_recall, line_dash="dash", line_color="#34d399", annotation_text="Meta (85%)")
-        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis_tickformat='.0%', yaxis_title="Taxa de Acerto", xaxis_title="Intervalo Sem Prática")
-        st.plotly_chart(fig, use_container_width=True)
+        fig.add_hline(y=limite_critico, line_dash="dot", line_color="#fb7185", annotation_text="Limite Crítico")
+        fig.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+            yaxis_tickformat='.0%', yaxis_title="Taxa de Acerto", xaxis_title="Intervalo Sem Prática"
+        )
+        st.plotly_chart(fig, width="stretch")
+
+        if qtd_criticos > 0:
+            render_html(f"""
+                <div class="insight-card insight-red">
+                    <div class="insight-title">⚠️ Diagnóstico Crítico de Esquecimento</div>
+                    <div class="insight-text">
+                        Foram identificadas <b>{qtd_criticos} faixas temporais na zona crítica de esquecimento</b> (retenção menor que {limite_critico*100:.0f}%). 
+                        Recomenda-se acionar revisões reforçadas para alunos com mais de {dias_corte} dias sem prática.
+                    </div>
+                </div>
+            """)
+        else:
+            render_html(f"""
+                <div class="insight-card insight-green">
+                    <div class="insight-title">✅ Estabilidade de Retenção</div>
+                    <div class="insight-text">
+                        Nenhum intervalo sem prática atingiu o nível crítico para este filtro. A retenção média continua dentro dos limites toleráveis.
+                    </div>
+                </div>
+            """)
     else:
-        st.info("Registros insuficientes para a Matriz de Esquecimento neste filtro.")
+        st.info("Registros insuficientes para a Análise de Esquecimento neste filtro.")
 
 # --- REVISÕES ---
 elif pagina == "Revisões":
@@ -373,7 +422,7 @@ elif pagina == "Revisões":
             xaxis_title="Faixa de Prática / Exposições", yaxis_title="Recall Médio",
             yaxis_tickformat='.0%', template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)'
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
     else:
         st.info("Registros insuficientes para a Análise de Revisões neste filtro.")
 
@@ -416,7 +465,7 @@ elif pagina == "Dificuldades":
             xaxis_tickformat='.0%',
             yaxis={'categoryorder': 'total ascending'}
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
     else:
         st.info("Dados de palavras indisponíveis para o idioma selecionado.")
 
@@ -427,12 +476,12 @@ elif pagina == "Simulador de Prioridade":
     col1, col2 = st.columns(2)
     with col1:
         idioma = st.selectbox("Idioma", ["Todos"] + idiomas, key="sim_lang")
-        dias_sem_pratica = st.number_input("Dias sem prática", 0, 365, 14)
+        dias_sem_pratica = st.number_input("Dias sem prática", 0, 365, 30)
     with col2:
-        exposicoes = st.number_input("Exposições anteriores", 0, 100, 5)
+        exposicoes = st.number_input("Exposições anteriores", 0, 100, 1)
         recall_minimo = st.slider("Recall mínimo desejado", 50, 100, 85) / 100
 
-    if st.button("🔍 Calcular Prioridade de Revisão", use_container_width=True):
+    if st.button("🔍 Calcular Prioridade de Revisão", width="stretch"):
         recall_est = estimar_recall_cenario(curve, idioma, dias_sem_pratica, exposicoes, recall_minimo)
         dif, orig = calcular_dificuldade_palavra(words, idioma)
         indice = calcular_indice_prioridade(recall_est, dias_sem_pratica, exposicoes, dif)
@@ -447,7 +496,7 @@ elif pagina == "Simulador de Prioridade":
             mode="gauge+number", value=indice, title={'text': "Risco de Esquecimento (%)"},
             gauge={
                 'axis': {'range': [0, 100]},
-                'bar': {'color': "#8b5cf6"},
+                'bar': {'color': "#ff4d67" if indice > 80 else ("#f59e0b" if indice > 60 else "#8b5cf6")},
                 'steps': [
                     {'range': [0, 30], 'color': "#102b23"},
                     {'range': [30, 60], 'color': "#38270d"},
@@ -457,7 +506,16 @@ elif pagina == "Simulador de Prioridade":
             }
         ))
         fig_gauge.update_layout(paper_bgcolor='rgba(0,0,0,0)', font={'color': "white"}, template="plotly_dark")
-        st.plotly_chart(fig_gauge, use_container_width=True)
+        st.plotly_chart(fig_gauge, width="stretch")
+
+        rec = obter_recomendacao(prio)
+        cor_card = "red" if prio == "Crítica" else ("orange" if prio == "Alta" else ("purple" if prio == "Média" else "green"))
+        render_html(f"""
+            <div class="insight-card insight-{cor_card}" style="margin-top: 1rem;">
+                <div class="insight-title">Direcionamento do Simulador — Prioridade {prio}</div>
+                <div class="insight-text">{rec}</div>
+            </div>
+        """)
 
 # --- DECISÕES ---
 elif pagina == "Decisões":
@@ -505,7 +563,7 @@ elif pagina == "Decisões":
                 template="plotly_dark"
             )
             fig_donut.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-            st.plotly_chart(fig_donut, use_container_width=True)
+            st.plotly_chart(fig_donut, width="stretch")
 
         with col_graf2:
             fig_hist = px.histogram(
@@ -517,7 +575,7 @@ elif pagina == "Decisões":
                 paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
                 xaxis_title="Índice de Prioridade", yaxis_title="Quantidade de Palavras"
             )
-            st.plotly_chart(fig_hist, use_container_width=True)
+            st.plotly_chart(fig_hist, width="stretch")
 
         secao(
             f"Top {quantidade_prioridades} Conteúdos com Maior Prioridade de Revisão",
@@ -551,7 +609,7 @@ elif pagina == "Decisões":
                 for c in tabela_exibicao.columns
             ]
 
-            st.dataframe(tabela_exibicao, use_container_width=True, hide_index=True)
+            st.dataframe(tabela_exibicao, width="stretch", hide_index=True)
 
         if critica > 0:
             rec_texto = f"Existem **{critica} palavras em estado crítico**. A recomendação é inserir esses termos imediatamente nos próximos blocos de prática."
