@@ -14,7 +14,11 @@ from utils.metrics import (
     calcular_indice_prioridade,
     classificar_prioridade,
     obter_recomendacao,
-    calcular_prioridades_conteudos
+    calcular_prioridades_conteudos,
+    normalizar_tempo,
+    normalizar_exposicoes,
+    classificar_faixa_tempo,
+    classificar_faixa_exposicoes
 )
 
 st.set_page_config(
@@ -81,7 +85,7 @@ def caixa_metrica(titulo, valor, descricao):
 def explicacao_grafico(titulo, texto):
     render_html(f"""
         <div class="insight-card insight-purple" style="margin-bottom: 1.2rem;">
-            <div class="insight-title">💡 Como interpretar este gráfico ({html.escape(titulo)}):</div>
+            <div class="insight-title">({html.escape(titulo)}):</div>
             <div class="insight-text">{html.escape(texto)}</div>
         </div>
     """)
@@ -325,106 +329,278 @@ elif pagina == "Esquecimento":
 
     explicacao_grafico(
         "Diagnóstico da Curva do Esquecimento",
-        "A retenção cai à medida que os dias passam sem revisão. O sistema identifica automaticamente as faixas onde a retenção cai abaixo do limite crítico para que a intervenção seja imediata."
+        "O heatmap apresenta a relação entre o tempo sem prática e o número de exposições anteriores. "
+        "Células com menor recall representam maior risco de esquecimento e indicam conteúdos "
+        "que podem necessitar de revisão."
     )
 
     c_esq1, c_esq2 = st.columns(2)
-    with c_esq1:
-        idioma = st.selectbox("Idioma para análise", ["Todos"] + idiomas, key="esq_lang")
-    with c_esq2:
-        dias_corte = st.slider("Dias sem prática para alerta crítico", 7, 60, 14, key="esq_dias")
 
-    df = filtrar_idioma(curve, idioma) if idioma != "Todos" else curve
-    lag_col = obter_coluna(df, ["lag_bin", "lag_days", "avg_lag_days"])
+    with c_esq1:
+        idioma = st.selectbox(
+            "Idioma para análise",
+            ["Todos"] + idiomas,
+            key="esq_lang"
+        )
+
+
+    df = (
+        filtrar_idioma(curve, idioma)
+        if idioma != "Todos"
+        else curve.copy()
+    )
+
+    lag_col = obter_coluna(
+        df,
+        [
+            "lag_bin",
+            "lag_days",
+            "avg_lag_days"
+        ]
+    )
+
+    exp_col = obter_coluna(
+        df,
+        [
+            "practice_bin",
+            "avg_prior_exposures",
+            "prior_exposures"
+        ]
+    )
+
     recall_col = obter_recall_col(df)
 
-    if not df.empty and lag_col and recall_col:
-        res = df.groupby(lag_col, as_index=False, observed=False)[recall_col].mean()
+    if not df.empty and lag_col and exp_col and recall_col:
 
-        res["status_risco"] = res[recall_col].apply(
-            lambda r: "Crítico" if r < limite_critico else ("Atenção" if r < meta_recall else "Seguro")
+        ordem_lag = [
+            "<1 hour",
+            "1-6 hours",
+            "6-24 hours",
+            "1-3 days",
+            "3-7 days",
+            "1-2 weeks",
+            "2-4 weeks",
+            "1-3 months",
+            "3+ months"
+        ]
+
+        ordem_exposicoes = [
+            "1-2 exposures",
+            "3-4 exposures",
+            "5-9 exposures",
+            "10-19 exposures",
+            "20+ exposures"
+        ]
+
+        df[lag_col] = pd.Categorical(
+            df[lag_col],
+            categories=ordem_lag,
+            ordered=True
         )
 
-        qtd_criticos = len(res[res["status_risco"] == "Crítico"])
-        qtd_atencao = len(res[res["status_risco"] == "Atenção"])
-        retencao_minima = res[recall_col].min()
-
-        m1, m2, m3 = st.columns(3)
-        with m1:
-            caixa_metrica("Faixas Críticas", str(qtd_criticos), "Abaixo do limite crítico")
-        with m2:
-            caixa_metrica("Faixas em Atenção", str(qtd_atencao), "Abaixo da meta global")
-        with m3:
-            caixa_metrica("Pior Retenção Observada", percentual(retencao_minima), "Menor taxa de acerto")
-
-        fig = px.bar(
-            res, x=lag_col, y=recall_col, text_auto='.1%',
-            color="status_risco",
-            color_discrete_map={"Crítico": "#ff4d67", "Atenção": "#f59e0b", "Seguro": "#34d399"},
-            title=f"Taxa de Retenção por Intervalo de Estudo — {idioma}",
-            template="plotly_dark"
+        df[exp_col] = pd.Categorical(
+            df[exp_col],
+            categories=ordem_exposicoes,
+            ordered=True
         )
-        fig.add_hline(y=meta_recall, line_dash="dash", line_color="#34d399", annotation_text="Meta (85%)")
-        fig.add_hline(y=limite_critico, line_dash="dot", line_color="#fb7185", annotation_text="Limite Crítico")
+
+        pivot_df = df.pivot_table(
+            index=exp_col,
+            columns=lag_col,
+            values=recall_col,
+            aggfunc="mean",
+            observed=False
+        )
+
+   
+        pivot_df = pivot_df.reindex(
+            index=ordem_exposicoes,
+            columns=ordem_lag
+        )
+
+        valores_recall = pivot_df.values.flatten()
+        valores_recall = valores_recall[
+            ~pd.isna(valores_recall)
+        ]
+
+        if len(valores_recall) > 0:
+
+            recall_minimo = float(valores_recall.min())
+            recall_medio = float(valores_recall.mean())
+
+            qtd_criticos = int(
+                (valores_recall < limite_critico).sum()
+            )
+
+            qtd_atencao = int(
+                (
+                    (valores_recall >= limite_critico)
+                    & (valores_recall < meta_recall)
+                ).sum()
+            )
+
+            m1, m2, m3 = st.columns(3)
+
+        secao(
+            "Matriz de Esquecimento",
+            "Relação entre tempo sem prática, exposições anteriores e retenção."
+        )
+
+        fig = px.imshow(
+            pivot_df,
+            labels=dict(
+                x="Intervalo sem Prática",
+                y="Faixa de Exposições",
+                color="Recall"
+            ),
+            x=pivot_df.columns,
+            y=pivot_df.index,
+            color_continuous_scale="Viridis",
+            template="plotly_dark",
+            aspect="auto",
+            text_auto=".1%"
+        )
+
         fig.update_layout(
-            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-            yaxis_tickformat='.0%', yaxis_title="Taxa de Acerto", xaxis_title="Intervalo Sem Prática"
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            title=f"Heatmap de Retenção — {idioma}",
+            xaxis_title="Intervalo sem Prática",
+            yaxis_title="Faixa de Exposições"
         )
-        st.plotly_chart(fig, width="stretch")
 
-        if qtd_criticos > 0:
-            render_html(f"""
-                <div class="insight-card insight-red">
-                    <div class="insight-title">⚠️ Diagnóstico Crítico de Esquecimento</div>
-                    <div class="insight-text">
-                        Foram identificadas <b>{qtd_criticos} faixas temporais na zona crítica de esquecimento</b> (retenção menor que {limite_critico*100:.0f}%). 
-                        Recomenda-se acionar revisões reforçadas para alunos com mais de {dias_corte} dias sem prática.
-                    </div>
+        fig.update_coloraxes(
+            colorbar_tickformat=".0%",
+            colorbar_title="Recall"
+        )
+
+        st.plotly_chart(
+            fig,
+            width="stretch"
+        )
+
+        render_html(
+            f"""
+            <div class="insight-card insight-purple">
+                <div class="insight-title">
                 </div>
-            """)
-        else:
-            render_html(f"""
-                <div class="insight-card insight-green">
-                    <div class="insight-title">✅ Estabilidade de Retenção</div>
-                    <div class="insight-text">
-                        Nenhum intervalo sem prática atingiu o nível crítico para este filtro. A retenção média continua dentro dos limites toleráveis.
-                    </div>
+
+                <div class="insight-text">
+                    As células representam a taxa média de recall para cada
+                    combinação entre tempo sem prática e quantidade de
+                    exposições anteriores.
+                    <br><br>
+
+                    <b>Recall mais alto</b> indica maior retenção.
+                    <br>
+
+                    <b>Recall mais baixo</b> indica maior risco de esquecimento.
+                    <br><br>
+
+                    O limite crítico configurado pelo sistema é de
+                    <b>{limite_critico * 100:.0f}%</b>.
+                    A meta global de retenção é de
+                    <b>{meta_recall * 100:.0f}%</b>.
                 </div>
-            """)
+            </div>
+            """
+        )
+
+
     else:
-        st.info("Registros insuficientes para a Análise de Esquecimento neste filtro.")
+
+        st.info(
+            "Registros insuficientes para formar a Matriz de Esquecimento neste filtro."
+        )
 
 # --- REVISÕES ---
 elif pagina == "Revisões":
-    cabecalho("Análise Avançada de Revisões", "Comportamento da retenção sob diferentes frequências de repetição.")
+    cabecalho(
+        "Análise Avançada de Revisões",
+        "Comportamento da retenção sob diferentes frequências de repetição."
+    )
 
     explicacao_grafico(
         "Curva de Aprendizado por Prática",
-        "A linha mostra que a curva de retenção sobe à medida que o histórico de treinos aumenta. Isso comprova a eficácia da repetição espaçada no aprendizado."
+        "A análise mostra como a retenção varia conforme aumenta "
+        "o número de exposições anteriores ao conteúdo."
     )
 
-    idioma = st.selectbox("Idioma", ["Todos"] + idiomas)
-    df = filtrar_idioma(curve, idioma) if idioma != "Todos" else curve
+    idioma = st.selectbox(
+        "Idioma",
+        ["Todos"] + idiomas,
+        key="rev_lang"
+    )
 
-    exp_col = obter_coluna(df, ["practice_bin", "avg_prior_exposures", "prior_exposures"])
+    df = (
+        filtrar_idioma(curve, idioma)
+        if idioma != "Todos"
+        else curve.copy()
+    )
+
+    exp_col = obter_coluna(
+        df,
+        ["practice_bin", "avg_prior_exposures", "prior_exposures"]
+    )
+
     recall_col = obter_recall_col(df)
 
     if not df.empty and exp_col and recall_col:
-        res = df.groupby(exp_col, as_index=False, observed=False)[recall_col].mean()
+
+        ordem_exposicoes = [
+            "1-2 exposures",
+            "3-4 exposures",
+            "5-9 exposures",
+            "10-19 exposures",
+            "20+ exposures"
+        ]
+
+        df[exp_col] = pd.Categorical(
+            df[exp_col],
+            categories=ordem_exposicoes,
+            ordered=True
+        )
+
+        res = df.groupby(
+            exp_col,
+            as_index=False,
+            observed=False
+        )[recall_col].mean()
+
+        res = res.sort_values(exp_col)
+
         fig = px.line(
-            res, x=exp_col, y=recall_col, markers=True,
+            res,
+            x=exp_col,
+            y=recall_col,
+            markers=True,
+            text=res[recall_col].map(lambda x: f"{x:.1%}"),
             title=f"Evolução da Retenção por Histórico de Treino — {idioma}",
-            color_discrete_sequence=['#8b5cf6']
+            template="plotly_dark"
         )
-        fig.update_traces(line=dict(width=3), marker=dict(size=10))
+
+        fig.update_traces(
+            line=dict(width=3),
+            marker=dict(size=10)
+        )
+
         fig.update_layout(
-            title=f"Evolução da Retenção por Histórico de Treino — {idioma}",
-            xaxis_title="Faixa de Prática / Exposições", yaxis_title="Recall Médio",
-            yaxis_tickformat='.0%', template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)'
+            xaxis_title="Faixa de Prática / Exposições",
+            yaxis_title="Recall Médio",
+            yaxis_tickformat=".0%",
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)"
         )
-        st.plotly_chart(fig, width="stretch")
+
+        st.plotly_chart(
+            fig,
+            width="stretch"
+        )
+
     else:
-        st.info("Registros insuficientes para a Análise de Revisões neste filtro.")
+        st.info(
+            "Registros insuficientes para a Análise de Revisões neste filtro."
+        )
 
 # --- DIFICULDADES ---
 elif pagina == "Dificuldades":
@@ -471,166 +647,528 @@ elif pagina == "Dificuldades":
 
 # --- SIMULADOR DE PRIORIDADE ---
 elif pagina == "Simulador de Prioridade":
-    cabecalho("Simulador de Prioridade de Revisão", "Calcule em tempo real o risco e o índice de prioridade de revisão.")
 
-    col1, col2 = st.columns(2)
+    cabecalho(
+        "Simulador de Prioridade",
+        "Estime a necessidade de revisão a partir de um cenário de aprendizagem."
+    )
+
+    secao(
+        "Cenário",
+        "Informe o idioma, o tempo sem prática e o número de exposições."
+    )
+
+    col1, col2, col3 = st.columns(3)
+
     with col1:
-        idioma = st.selectbox("Idioma", ["Todos"] + idiomas, key="sim_lang")
-        dias_sem_pratica = st.number_input("Dias sem prática", 0, 365, 30)
-    with col2:
-        exposicoes = st.number_input("Exposições anteriores", 0, 100, 1)
-        recall_minimo = st.slider("Recall mínimo desejado", 50, 100, 85) / 100
+        idioma = st.selectbox(
+            "Idioma",
+            ["Todos"] + idiomas,
+            key="sim_lang"
+        )
 
-    if st.button("🔍 Calcular Prioridade de Revisão", width="stretch"):
-        recall_est = estimar_recall_cenario(curve, idioma, dias_sem_pratica, exposicoes, recall_minimo)
-        dif, orig = calcular_dificuldade_palavra(words, idioma)
-        indice = calcular_indice_prioridade(recall_est, dias_sem_pratica, exposicoes, dif)
-        prio = classificar_prioridade(indice)
+    with col2:
+        dias_sem_pratica = st.number_input(
+            "Dias sem prática",
+            min_value=0,
+            max_value=365,
+            value=30,
+            step=1,
+            key="sim_dias"
+        )
+
+    with col3:
+        exposicoes = st.number_input(
+            "Exposições anteriores",
+            min_value=0,
+            max_value=100,
+            value=1,
+            step=1,
+            key="sim_exposicoes"
+        )
+
+    meta_simulacao = st.slider(
+        "Meta de recall",
+        min_value=50,
+        max_value=100,
+        value=90,
+        step=1,
+        key="sim_meta"
+    ) / 100
+
+    if st.button(
+        "Calcular cenário",
+        width="stretch",
+        key="btn_simulador"
+    ):
+
+        # --------------------------------------------------
+        # 1. RECALL ESTIMADO PELO DATASET
+        # --------------------------------------------------
+
+        recall_est = estimar_recall_cenario(
+            curve,
+            idioma,
+            dias_sem_pratica,
+            exposicoes
+        )
+
+        # --------------------------------------------------
+        # 2. DIFICULDADE OBSERVADA NO DATASET
+        # --------------------------------------------------
+
+        dificuldade, origem = calcular_dificuldade_palavra(
+            words,
+            idioma
+        )
+
+        # --------------------------------------------------
+        # 3. ÍNDICE DE PRIORIDADE DO SAD
+        # --------------------------------------------------
+
+        indice = calcular_indice_prioridade(
+            recall=recall_est,
+            dias_sem_pratica=dias_sem_pratica,
+            exposicoes=exposicoes,
+            dificuldade=dificuldade
+        )
+
+        # --------------------------------------------------
+        # 4. CLASSIFICAÇÃO
+        # --------------------------------------------------
+
+        prioridade = classificar_prioridade(indice)
+
+        # --------------------------------------------------
+        # RESULTADO
+        # --------------------------------------------------
+
+        secao(
+            "Resultado da Simulação",
+            "Estimativa baseada no histórico do dataset e nos fatores do SAD."
+        )
 
         c1, c2, c3 = st.columns(3)
-        with c1: caixa_metrica("Índice Calculado", f"{indice:.1f} / 100", "Escala do SAD")
-        with c2: caixa_metrica("Prioridade", prio, "Classificação do algoritmo")
-        with c3: caixa_metrica("Recall Estimado", percentual(recall_est), "Previsão de retenção")
+
+        with c1:
+            caixa_metrica(
+                "Índice Calculado",
+                f"{indice:.1f} / 100",
+                "Risco e prioridade"
+            )
+
+        with c2:
+            caixa_metrica(
+                "Prioridade",
+                prioridade,
+                "Necessidade de revisão"
+            )
+
+        with c3:
+            caixa_metrica(
+                "Recall Estimado",
+                percentual(recall_est),
+                "Retenção prevista"
+            )
+
+ # -----------------------------------------------------
+        # GRAVIDADE / TERMÔMETRO DE RISCO
+        # -----------------------------------------------------
 
         fig_gauge = go.Figure(go.Indicator(
-            mode="gauge+number", value=indice, title={'text': "Risco de Esquecimento (%)"},
+            mode="gauge+number",
+            value=indice,
+            title={
+                "text": "Risco de Esquecimento (%)"
+            },
             gauge={
-                'axis': {'range': [0, 100]},
-                'bar': {'color': "#ff4d67" if indice > 80 else ("#f59e0b" if indice > 60 else "#8b5cf6")},
-                'steps': [
-                    {'range': [0, 30], 'color': "#102b23"},
-                    {'range': [30, 60], 'color': "#38270d"},
-                    {'range': [60, 80], 'color': "#3b1720"},
-                    {'range': [80, 100], 'color': "#4a1019"}
+                "axis": {
+                    "range": [0, 100]
+                },
+                "bar": {
+                    "color": (
+                        "#ff4d67"
+                        if indice > 80
+                        else "#f59e0b"
+                        if indice > 60
+                        else "#8b5cf6"
+                    )
+                },
+                "steps": [
+                    {
+                        "range": [0, 30],
+                        "color": "#102b23"
+                    },
+                    {
+                        "range": [30, 60],
+                        "color": "#38270d"
+                    },
+                    {
+                        "range": [60, 80],
+                        "color": "#3b1720"
+                    },
+                    {
+                        "range": [80, 100],
+                        "color": "#4a1019"
+                    }
                 ]
             }
         ))
-        fig_gauge.update_layout(paper_bgcolor='rgba(0,0,0,0)', font={'color': "white"}, template="plotly_dark")
-        st.plotly_chart(fig_gauge, width="stretch")
 
-        rec = obter_recomendacao(prio)
-        cor_card = "red" if prio == "Crítica" else ("orange" if prio == "Alta" else ("purple" if prio == "Média" else "green"))
+        fig_gauge.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            font={
+                "color": "white"
+            },
+            template="plotly_dark",
+            height=300,
+            margin=dict(
+                l=20,
+                r=20,
+                t=60,
+                b=20
+            )
+        )
+
+        st.plotly_chart(
+            fig_gauge,
+            width="stretch"
+        )
+
+        # -----------------------------------------------------
+        # SITUAÇÃO EM RELAÇÃO À META
+        # -----------------------------------------------------
+
+        if recall_est < meta_simulacao:
+
+            deficit = (meta_simulacao - recall_est) * 100
+
+            render_html(f"""
+                <div class="insight-card insight-red"
+                     style="margin-top: 1rem;">
+
+                    <div class="insight-title">
+                        ⚠️ Recall abaixo da meta
+                    </div>
+
+                    <div class="insight-text">
+                        Recall estimado de <b>{recall_est:.1%}</b>,
+                        abaixo da meta de <b>{meta_simulacao:.1%}</b>.
+                        Déficit de <b>{deficit:.1f} pontos percentuais</b>.
+                    </div>
+
+                </div>
+            """)
+
+        else:
+
+            render_html(f"""
+                <div class="insight-card insight-green"
+                     style="margin-top: 1rem;">
+
+                    <div class="insight-title">
+                        ✓ Recall dentro da meta
+                    </div>
+
+                    <div class="insight-text">
+                        Recall estimado de <b>{recall_est:.1%}</b>,
+                        dentro da meta de <b>{meta_simulacao:.1%}</b>.
+                    </div>
+
+                </div>
+            """)
+
+        # -----------------------------------------------------
+        # RECOMENDAÇÃO
+        # -----------------------------------------------------
+
+        recomendacao = obter_recomendacao(prioridade)
+
+        cor_recomendacao = {
+            "Baixa": "green",
+            "Média": "purple",
+            "Alta": "orange",
+            "Crítica": "red"
+        }.get(prioridade, "purple")
+
         render_html(f"""
-            <div class="insight-card insight-{cor_card}" style="margin-top: 1rem;">
-                <div class="insight-title">Direcionamento do Simulador — Prioridade {prio}</div>
-                <div class="insight-text">{rec}</div>
+            <div class="insight-card insight-{cor_recomendacao}"
+                 style="margin-top: 1rem;">
+
+                <div class="insight-title">
+                    Decisão do SAD
+                </div>
+
+                <div class="insight-text">
+                    {recomendacao}
+                </div>
+
             </div>
         """)
 
 # --- DECISÕES ---
 elif pagina == "Decisões":
+
     cabecalho(
-        "Painel Executivo de Decisão",
-        "Visão estratégica e priorização acionável do vocabulário para intervenção pedagógica."
+        "Decisões",
+        "Priorize os conteúdos que mais precisam de revisão."
     )
 
-    c_param1, c_param2, c_param3 = st.columns(3)
-    with c_param1:
-        tempo_padrao = st.slider("Tempo de referência sem prática (dias)", 1, 60, 14)
-    with c_param2:
-        exposicoes_padrao = st.slider("Exposições de referência", 0, 20, 5)
-    with c_param3:
-        idioma = st.selectbox("Idioma para priorização", ["Todos"] + idiomas)
+    col1, col2, col3 = st.columns(3)
 
-    df_w = filtrar_idioma(words, idioma) if idioma != "Todos" else words
-    prio_df = calcular_prioridades_conteudos(df_w, tempo_padrao, exposicoes_padrao)
-
-    if not prio_df.empty:
-        critica = len(prio_df[prio_df["prioridade"] == "Crítica"])
-        alta = len(prio_df[prio_df["prioridade"] == "Alta"])
-        media = len(prio_df[prio_df["prioridade"] == "Média"])
-        baixa = len(prio_df[prio_df["prioridade"] == "Baixa"])
-
-        c1, c2, c3, c4 = st.columns(4)
-        with c1: caixa_metrica("Prioridade Crítica", str(critica), "Revisão imediata necessária")
-        with c2: caixa_metrica("Prioridade Alta", str(alta), "Atenção nas próximas sessões")
-        with c3: caixa_metrica("Prioridade Média", str(media), "Acompanhamento de rotina")
-        with c4: caixa_metrica("Prioridade Baixa", str(baixa), "Retenção sob controle")
-
-        secao("Visão Geral de Distribuição da Base")
-
-        col_graf1, col_graf2 = st.columns([1, 1])
-
-        with col_graf1:
-            counts = prio_df["prioridade"].value_counts().reset_index()
-            counts.columns = ["Prioridade", "Quantidade"]
-
-            fig_donut = px.pie(
-                counts, names="Prioridade", values="Quantidade",
-                title=f"Proporção por Categoria de Risco — {idioma}",
-                hole=0.5, color="Prioridade",
-                color_discrete_map={"Baixa": "#34d399", "Média": "#f59e0b", "Alta": "#fb7185", "Crítica": "#ff4d67"},
-                template="plotly_dark"
-            )
-            fig_donut.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-            st.plotly_chart(fig_donut, width="stretch")
-
-        with col_graf2:
-            fig_hist = px.histogram(
-                prio_df, x="indice_prioridade", nbins=20,
-                title="Distribuição do Índice de Prioridade de Revisão (0–100)",
-                color_discrete_sequence=['#8b5cf6'], template="plotly_dark"
-            )
-            fig_hist.update_layout(
-                paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                xaxis_title="Índice de Prioridade", yaxis_title="Quantidade de Palavras"
-            )
-            st.plotly_chart(fig_hist, width="stretch")
-
-        secao(
-            f"Top {quantidade_prioridades} Conteúdos com Maior Prioridade de Revisão",
-            "Ranking ordenado pelo Índice de Prioridade calculando combinação de recall, tempo e dificuldade."
+    with col1:
+        tempo_padrao = st.slider(
+            "Dias sem prática",
+            min_value=1,
+            max_value=60,
+            value=14,
+            key="dec_tempo"
         )
 
-        palavra_col = obter_nome_palavra(prio_df)
+    with col2:
+        exposicoes_padrao = st.slider(
+            "Exposições",
+            min_value=0,
+            max_value=20,
+            value=5,
+            key="dec_exposicoes"
+        )
+
+    with col3:
+        idioma = st.selectbox(
+            "Idioma",
+            ["Todos"] + idiomas,
+            key="dec_idioma"
+        )
+
+    df_w = (
+        filtrar_idioma(words, idioma)
+        if idioma != "Todos"
+        else words
+    )
+
+    prio_df = calcular_prioridades_conteudos(
+        df_w,
+        tempo_padrao,
+        exposicoes_padrao
+    )
+
+    if not prio_df.empty:
+
+        critica = int(
+            (
+                prio_df["prioridade"] == "Crítica"
+            ).sum()
+        )
+
+        alta = int(
+            (
+                prio_df["prioridade"] == "Alta"
+            ).sum()
+        )
+
+        media = int(
+            (
+                prio_df["prioridade"] == "Média"
+            ).sum()
+        )
+
+        baixa = int(
+            (
+                prio_df["prioridade"] == "Baixa"
+           ).sum()
+        )
+
+        counts = (
+            prio_df["prioridade"]
+            .value_counts()
+            .reindex(
+                [
+                    "Baixa",
+                    "Média",
+                    "Alta",
+                    "Crítica"
+                ],
+                fill_value=0
+            )
+            .reset_index()
+        )
+
+        counts.columns = [
+            "Prioridade",
+            "Quantidade"
+        ]
+
+        fig_donut = px.pie(
+            counts,
+            names="Prioridade",
+            values="Quantidade",
+            title=f"Prioridade dos Conteúdos — {idioma}",
+            hole=0.5,
+            color="Prioridade",
+            color_discrete_map={
+                "Baixa": "#34d399",
+                "Média": "#f59e0b",
+                "Alta": "#fb7185",
+                "Crítica": "#ff4d67"
+            },
+            template="plotly_dark"
+        )
+
+        fig_donut.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            margin=dict(
+                l=20,
+                r=20,
+                t=50,
+                b=20
+            )
+        )
+
+        st.plotly_chart(
+            fig_donut,
+            width="stretch"
+        )
+
+        secao(
+            "Conteúdos Prioritários",
+            "Conteúdos com maior índice de prioridade."
+        )
+
+        palavra_col = obter_nome_palavra(
+            prio_df
+        )
+
         if palavra_col:
-            ranking = prio_df.sort_values("indice_prioridade", ascending=False).head(quantidade_prioridades).copy()
 
-            colunas_exibir = [palavra_col, "idioma", "classe_gramatical", "recall_utilizado", "dificuldade", "indice_prioridade", "prioridade"]
-            colunas_existentes = [c for c in colunas_exibir if c in ranking.columns]
+            ranking = (
+                prio_df
+                .sort_values(
+                    "indice_prioridade",
+                    ascending=False
+                )
+                .head(
+                    quantidade_prioridades
+                )
+                .copy()
+            )
 
-            tabela_exibicao = ranking[colunas_existentes].copy()
-
-            if "recall_utilizado" in tabela_exibicao.columns:
-                tabela_exibicao["recall_utilizado"] = (tabela_exibicao["recall_utilizado"] * 100).round(1).astype(str) + "%"
-            if "dificuldade" in tabela_exibicao.columns:
-                tabela_exibicao["dificuldade"] = (tabela_exibicao["dificuldade"] * 100).round(1).astype(str) + "%"
-            if "indice_prioridade" in tabela_exibicao.columns:
-                tabela_exibicao["indice_prioridade"] = tabela_exibicao["indice_prioridade"].round(1)
-
-            tabela_exibicao.columns = [
-                "Palavra / Termo" if c == palavra_col else
-                "Idioma" if c == "idioma" else
-                "Classe Gramatical" if c == "classe_gramatical" else
-                "Recall Observado" if c == "recall_utilizado" else
-                "Dificuldade Est." if c == "dificuldade" else
-                "Índice de Prioridade" if c == "indice_prioridade" else
-                "Prioridade" if c == "prioridade" else c
-                for c in tabela_exibicao.columns
+            colunas_exibir = [
+                palavra_col,
+                "recall_utilizado",
+                "indice_prioridade",
+                "prioridade"
             ]
 
-            st.dataframe(tabela_exibicao, width="stretch", hide_index=True)
+            colunas_existentes = [
+                c
+                for c in colunas_exibir
+                if c in ranking.columns
+            ]
+
+            tabela = ranking[
+                colunas_existentes
+            ].copy()
+
+            # Recall
+            if "recall_utilizado" in tabela.columns:
+
+                tabela["recall_utilizado"] = (
+                    tabela["recall_utilizado"] * 100
+                ).round(1).astype(str) + "%"
+
+            # Índice
+            if "indice_prioridade" in tabela.columns:
+
+                tabela["indice_prioridade"] = (
+                    tabela["indice_prioridade"]
+                    .round(1)
+                )
+
+            # Nomes das colunas
+            tabela.columns = [
+                "Palavra"
+                if c == palavra_col
+
+                else "Recall"
+                if c == "recall_utilizado"
+
+                else "Índice"
+                if c == "indice_prioridade"
+
+                else "Prioridade"
+                if c == "prioridade"
+
+                else c
+
+                for c in tabela.columns
+            ]
+
+            st.dataframe(
+                tabela,
+                width="stretch",
+                hide_index=True
+            )
+
+        secao(
+            "Decisão Recomendada"
+        )
 
         if critica > 0:
-            rec_texto = f"Existem **{critica} palavras em estado crítico**. A recomendação é inserir esses termos imediatamente nos próximos blocos de prática."
-            tipo_rec = "red"
-        elif alta > 0:
-            rec_texto = f"Existem **{alta} palavras com prioridade alta**. Recomenda-se programar a revisão para os próximos 3 dias."
-            tipo_rec = "orange"
-        else:
-            rec_texto = "A retenção geral da base está dentro dos níveis aceitáveis. Mantenha o fluxo regular de treino."
-            tipo_rec = "green"
 
-        secao("Decisão Recomendada pelo SAD")
+            mensagem = (
+                f"Priorizar imediatamente os "
+                f"**{critica} conteúdos críticos**."
+            )
+
+            cor = "red"
+
+        elif alta > 0:
+
+            mensagem = (
+                f"Programar a revisão dos "
+                f"**{alta} conteúdos de alta prioridade**."
+            )
+
+            cor = "orange"
+
+        elif media > 0:
+
+            mensagem = (
+                f"Manter acompanhamento dos conteúdos. "
+                f"Existem **{media} conteúdos em prioridade média**."
+            )
+
+            cor = "purple"
+
+        else:
+
+            mensagem = (
+                "Não foram identificados conteúdos "
+                "com prioridade alta ou crítica."
+            )
+
+            cor = "green"
+
         render_html(f"""
-            <div class="insight-card insight-{tipo_rec}">
-                <div class="insight-title">Direcionamento Estratégico</div>
-                <div class="insight-text">{rec_texto}</div>
+            <div class="insight-card insight-{cor}">
+                <div class="insight-title">
+                    Direcionamento do SAD
+                </div>
+
+                <div class="insight-text">
+                    {mensagem}
+                </div>
             </div>
         """)
 
     else:
-        st.warning("Não foi possível calcular a distribuição de prioridades para este filtro.")
+
+        st.info(
+            "Não foi possível calcular as prioridades "
+            "para o filtro selecionado."
+        )
 
 render_html("""
     <div class="footer">

@@ -12,12 +12,51 @@ def obter_coluna(df, opcoes):
 
 
 def normalizar_tempo(dias):
-    # Considera 14 dias sem prática como limite máximo de risco (100% do fator tempo)
-    return min(max(float(dias) / 14.0, 0.0), 1.0)
+    dias = float(dias)
+
+    if dias <= 0:
+        return 0.0
+
+    if dias < 1:
+        return 0.10
+
+    if dias < 3:
+        return 0.20
+
+    if dias < 7:
+        return 0.35
+
+    if dias < 14:
+        return 0.50
+
+    if dias < 30:
+        return 0.65
+
+    if dias < 90:
+        return 0.80
+
+    return 1.0
 
 
 def normalizar_exposicoes(exposicoes):
-    return 1.0 - min(max(float(exposicoes) / 10.0, 0.0), 1.0)
+    exposicoes = float(exposicoes)
+
+    if exposicoes <= 0:
+        return 1.0
+
+    if exposicoes <= 2:
+        return 0.80
+
+    if exposicoes <= 4:
+        return 0.60
+
+    if exposicoes <= 9:
+        return 0.40
+
+    if exposicoes <= 19:
+        return 0.20
+
+    return 0.0
 
 
 def calcular_indice_prioridade(
@@ -47,9 +86,9 @@ def calcular_indice_prioridade(
 def classificar_prioridade(indice):
     if indice <= 30.0:
         return "Baixa"
-    if indice <= 60.0:
+    if indice <= 50.0:
         return "Média"
-    if indice <= 80.0:
+    if indice <= 70.0:
         return "Alta"
     return "Crítica"
 
@@ -79,6 +118,44 @@ def obter_recomendacao(prioridade):
     )
 
 
+def classificar_faixa_tempo(dias):
+    dias = float(dias)
+
+    if dias < 1 / 24:
+        return "<1 hour"
+    elif dias < 6 / 24:
+        return "1-6 hours"
+    elif dias < 1:
+        return "6-24 hours"
+    elif dias < 3:
+        return "1-3 days"
+    elif dias < 7:
+        return "3-7 days"
+    elif dias < 14:
+        return "1-2 weeks"
+    elif dias < 30:
+        return "2-4 weeks"
+    elif dias < 90:
+        return "1-3 months"
+    else:
+        return "3+ months"
+
+
+def classificar_faixa_exposicoes(exposicoes):
+    exposicoes = int(exposicoes)
+
+    if exposicoes <= 2:
+        return "1-2 exposures"
+    elif exposicoes <= 4:
+        return "3-4 exposures"
+    elif exposicoes <= 9:
+        return "5-9 exposures"
+    elif exposicoes <= 19:
+        return "10-19 exposures"
+    else:
+        return "20+ exposures"
+
+
 def estimar_recall_cenario(
     curve,
     idioma,
@@ -87,62 +164,193 @@ def estimar_recall_cenario(
     recall_historico=0.85
 ):
     if curve is None or curve.empty:
-        # Modelo téorico simples caso não haja registros no dataset
-        decay = np.exp(-0.05 * dias_sem_pratica)
-        recall_est = max(0.2, min(0.95, decay + 0.05 * min(exposicoes, 10)))
-        return recall_est
+        return recall_historico
 
     df = curve.copy()
 
-    if idioma != "Todos" and "idioma" in df.columns:
-        filtrado = df[df["idioma"].astype(str).str.lower() == str(idioma).lower()]
+    # ---------------------------------------------------------
+    # FILTRO POR IDIOMA
+    # ---------------------------------------------------------
+
+    if (
+        idioma != "Todos"
+        and "idioma" in df.columns
+    ):
+        filtrado = df[
+            df["idioma"].astype(str).str.lower()
+            == str(idioma).lower()
+        ]
+
         if not filtrado.empty:
             df = filtrado
 
-    recall_col = obter_coluna(
-        df,
-        ["item_recall_rate", "avg_session_recall", "recall"]
-    )
+    # ---------------------------------------------------------
+    # IDENTIFICA COLUNAS DA CURVA
+    # ---------------------------------------------------------
+
     lag_col = obter_coluna(
         df,
-        ["lag_days", "avg_lag_days"]
+        ["lag_bin", "lag_days", "avg_lag_days"]
     )
-    exposure_col = obter_coluna(
+
+    exp_col = obter_coluna(
         df,
-        ["avg_prior_exposures", "prior_exposures", "exposures"]
+        [
+            "practice_bin",
+            "avg_prior_exposures",
+            "prior_exposures",
+            "exposures"
+        ]
+    )
+
+    recall_col = obter_coluna(
+        df,
+        [
+            "avg_session_recall",
+            "item_recall_rate",
+            "avg_recall",
+            "recall"
+        ]
     )
 
     if recall_col is None:
         return recall_historico
 
-    if lag_col is None or exposure_col is None:
-        valor = df[recall_col].mean()
-        if pd.isna(valor):
-            return recall_historico
-        return float(valor)
+    # ---------------------------------------------------------
+    # CASO A CURVA POSSUA AS FAIXAS DO DATASET
+    # ---------------------------------------------------------
 
-    dados = df[[lag_col, exposure_col, recall_col]].dropna()
-    if dados.empty:
+    if (
+        lag_col == "lag_bin"
+        and exp_col == "practice_bin"
+    ):
+
+        faixa_tempo = classificar_faixa_tempo(
+            dias_sem_pratica
+        )
+
+        faixa_exposicoes = classificar_faixa_exposicoes(
+            exposicoes
+        )
+
+        resultado = df[
+            (df[lag_col].astype(str) == faixa_tempo)
+            &
+            (df[exp_col].astype(str) == faixa_exposicoes)
+        ]
+
+        if not resultado.empty:
+
+            recall = resultado[recall_col].mean()
+
+            if not pd.isna(recall):
+                return float(
+                    min(
+                        max(recall, 0.15),
+                        0.98
+                    )
+                )
+
+        # -----------------------------------------------------
+        # FALLBACK: MESMA FAIXA DE TEMPO
+        # -----------------------------------------------------
+
+        resultado_tempo = df[
+            df[lag_col].astype(str) == faixa_tempo
+        ]
+
+        if not resultado_tempo.empty:
+
+            recall = resultado_tempo[recall_col].mean()
+
+            if not pd.isna(recall):
+                return float(
+                    min(
+                        max(recall, 0.15),
+                        0.98
+                    )
+                )
+
+    # ---------------------------------------------------------
+    # CASO TENHA COLUNAS NUMÉRICAS
+    # ---------------------------------------------------------
+
+    if lag_col and exp_col:
+
+        dados = df[
+            [lag_col, exp_col, recall_col]
+        ].copy()
+
+        dados[lag_col] = pd.to_numeric(
+            dados[lag_col],
+            errors="coerce"
+        )
+
+        dados[exp_col] = pd.to_numeric(
+            dados[exp_col],
+            errors="coerce"
+        )
+
+        dados[recall_col] = pd.to_numeric(
+            dados[recall_col],
+            errors="coerce"
+        )
+
+        dados = dados.dropna()
+
+        if not dados.empty:
+
+            lag_max = max(
+                float(dados[lag_col].max()),
+                1.0
+            )
+
+            exp_max = max(
+                float(dados[exp_col].max()),
+                1.0
+            )
+
+            dados["distancia"] = (
+                abs(
+                    dados[lag_col]
+                    - dias_sem_pratica
+                ) / lag_max
+                +
+                abs(
+                    dados[exp_col]
+                    - exposicoes
+                ) / exp_max
+            )
+
+            linha = dados.loc[
+                dados["distancia"].idxmin()
+            ]
+
+            return float(
+                min(
+                    max(
+                        float(linha[recall_col]),
+                        0.15
+                    ),
+                    0.98
+                )
+            )
+
+    # ---------------------------------------------------------
+    # ÚLTIMO FALLBACK
+    # ---------------------------------------------------------
+
+    valor = df[recall_col].mean()
+
+    if pd.isna(valor):
         return recall_historico
 
-    # Penalização de decay para dias muito altos
-    lag_max = max(float(dados[lag_col].max()), 1.0)
-    exposure_max = max(float(dados[exposure_col].max()), 1.0)
-
-    dados = dados.copy()
-    dados["distancia"] = (
-        abs(dados[lag_col] - dias_sem_pratica) / lag_max
-        + abs(dados[exposure_col] - exposicoes) / exposure_max
+    return float(
+        min(
+            max(float(valor), 0.15),
+            0.98
+        )
     )
-
-    linha = dados.loc[dados["distancia"].idxmin()]
-    recall_base = float(linha[recall_col])
-
-    # Se estiver muitos dias sem prática, aplica decaimento extra
-    fator_decaimento = np.exp(-0.02 * max(0, dias_sem_pratica - 7))
-    recall_estimado = recall_base * fator_decaimento
-
-    return min(max(recall_estimado, 0.15), 0.98)
 
 
 def calcular_dificuldade_palavra(
