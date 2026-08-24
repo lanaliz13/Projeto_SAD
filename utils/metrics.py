@@ -72,11 +72,10 @@ def calcular_indice_prioridade(
     fator_tempo = normalizar_tempo(dias_sem_pratica)
     fator_exposicoes = normalizar_exposicoes(exposicoes)
 
-    # Recalibragem de pesos para dar maior sensibilidade ao risco e tempo sem prática
     indice = (
         0.55 * risco_recall
-        + 0.25 * fator_tempo
-        + 0.10 * fator_exposicoes
+        + 0.30 * fator_tempo
+        + 0.05 * fator_exposicoes
         + 0.10 * dificuldade
     ) * 100.0
 
@@ -168,10 +167,6 @@ def estimar_recall_cenario(
 
     df = curve.copy()
 
-    # ---------------------------------------------------------
-    # FILTRO POR IDIOMA
-    # ---------------------------------------------------------
-
     if (
         idioma != "Todos"
         and "idioma" in df.columns
@@ -183,10 +178,6 @@ def estimar_recall_cenario(
 
         if not filtrado.empty:
             df = filtrado
-
-    # ---------------------------------------------------------
-    # IDENTIFICA COLUNAS DA CURVA
-    # ---------------------------------------------------------
 
     lag_col = obter_coluna(
         df,
@@ -215,10 +206,6 @@ def estimar_recall_cenario(
 
     if recall_col is None:
         return recall_historico
-
-    # ---------------------------------------------------------
-    # CASO A CURVA POSSUA AS FAIXAS DO DATASET
-    # ---------------------------------------------------------
 
     if (
         lag_col == "lag_bin"
@@ -251,10 +238,6 @@ def estimar_recall_cenario(
                     )
                 )
 
-        # -----------------------------------------------------
-        # FALLBACK: MESMA FAIXA DE TEMPO
-        # -----------------------------------------------------
-
         resultado_tempo = df[
             df[lag_col].astype(str) == faixa_tempo
         ]
@@ -271,9 +254,6 @@ def estimar_recall_cenario(
                     )
                 )
 
-    # ---------------------------------------------------------
-    # CASO TENHA COLUNAS NUMÉRICAS
-    # ---------------------------------------------------------
 
     if lag_col and exp_col:
 
@@ -335,10 +315,6 @@ def estimar_recall_cenario(
                     0.98
                 )
             )
-
-    # ---------------------------------------------------------
-    # ÚLTIMO FALLBACK
-    # ---------------------------------------------------------
 
     valor = df[recall_col].mean()
 
